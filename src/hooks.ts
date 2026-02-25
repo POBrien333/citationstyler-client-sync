@@ -22,6 +22,7 @@ import {
   registerExtraColumn,
   registerExtraColumnWithCustomCell,
 } from "./modules/item-tree";
+import { registerMenu } from "./modules/menu";
 import { exampleNotifierCallback, registerNotifier } from "./modules/notifier";
 import { registerPrefPanes, registerPrefsScripts } from "./modules/preference";
 import {
@@ -53,6 +54,9 @@ async function onStartup() {
   // Item Tree
   registerExtraColumn();
   registerExtraColumnWithCustomCell();
+
+  // Menu
+  registerMenu();
 
   /** --- Examples end --- */
 

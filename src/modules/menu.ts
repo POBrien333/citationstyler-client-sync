@@ -5,7 +5,7 @@
  * Lifecycle:
  * - Register: onStartup
  * - Unregister: onShutdown
- * - Requires manual unregister: No, handled by Zotero Plugin Toolkit
+ * - Requires manual unregister: No, handled by Zotero
  */
 
 import { getLocaleID } from "../utils/locale";
@@ -15,7 +15,7 @@ const icon = `chrome://${config.addonRef}/content/icons/favicon@0.5x.png`;
 
 export function registerMenu() {
   Zotero.MenuManager.registerMenu({
-    menuID: "menu-item",
+    menuID: getLocaleID("menuitem-label"),
     pluginID: config.addonID,
     target: "main/library/item",
     menus: [
