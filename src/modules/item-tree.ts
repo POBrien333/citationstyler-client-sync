@@ -8,9 +8,9 @@
  * - Requires manual unregister: No, handled by Zotero
  */
 
-export async function registerExtraColumn() {
+export function registerExtraColumn() {
   const field = "test1";
-  await Zotero.ItemTreeManager.registerColumns({
+  Zotero.ItemTreeManager.registerColumn({
     pluginID: addon.data.config.addonID,
     dataKey: field,
     label: "text column",
@@ -21,9 +21,9 @@ export async function registerExtraColumn() {
   });
 }
 
-export async function registerExtraColumnWithCustomCell() {
+export function registerExtraColumnWithCustomCell() {
   const field = "test2";
-  await Zotero.ItemTreeManager.registerColumns({
+  Zotero.ItemTreeManager.registerColumn({
     pluginID: addon.data.config.addonID,
     dataKey: field,
     label: "custom column",
