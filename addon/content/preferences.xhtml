@@ -1,33 +1,53 @@
 <linkset>
-  <html:link rel="localization" href="__addonRef__-preferences.ftl" />
+  <html:link rel="localization" href="mycustomstyles-preferences.ftl" />
 </linkset>
+
 <groupbox
   onload="Zotero.__addonInstance__.hooks.onPrefsEvent('load', { window })"
 >
-  <label><html:h2 data-l10n-id="pref-title"></html:h2></label>
-  <checkbox
-    id="zotero-prefpane-__addonRef__-enable"
-    preference="enable"
-    data-l10n-id="pref-enable"
-  />
-  <hbox>
-    <html:label
-      for="zotero-prefpane-__addonRef__-input"
-      data-l10n-id="pref-input"
-    ></html:label>
-    <html:input
-      type="text"
-      id="zotero-prefpane-__addonRef__-input"
-      preference="input"
-    ></html:input>
+  <label><html:h2 data-l10n-id="mycustomstyles-prefs-title"></html:h2></label>
+
+  <!-- Email -->
+  <hbox align="center" style="margin-bottom:8px;">
+    <html:label data-l10n-id="mycustomstyles-email-label"
+      style="min-width:120px; font-weight:600; font-size:13px;"></html:label>
+    <html:input id="prefs-email-input" type="email"
+      style="flex:1; padding:6px 10px; border:1px solid #ccc; border-radius:4px; font-size:13px;" />
   </hbox>
-  <hbox class="virtualized-table-container" flex="1" height="300px">
-    <html:div id="__addonRef__-table-container" />
+
+  <!-- License Key -->
+  <hbox align="center" style="margin-bottom:12px;">
+    <html:label data-l10n-id="mycustomstyles-license-label"
+      style="min-width:120px; font-weight:600; font-size:13px;"></html:label>
+    <html:input id="prefs-license-input" type="text"
+      style="flex:1; padding:6px 10px; border:1px solid #ccc; border-radius:4px; font-family:monospace; font-size:13px;" />
   </hbox>
+
+  <!-- Buttons -->
+  <hbox align="center" style="margin-bottom:14px; gap:8px;">
+    <html:button id="prefs-verify-btn" data-l10n-id="mycustomstyles-verify-btn"
+      style="padding:6px 18px; font-weight:600; font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+    </html:button>
+    <html:button id="prefs-logout-btn" data-l10n-id="mycustomstyles-clear-btn"
+      style="padding:6px 18px; font-size:13px; font-weight:600; color:#888; border:1px solid #ccc; background:transparent; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+    </html:button>
+  </hbox>
+
+  <!-- Status -->
+  <html:div id="prefs-status"
+    style="margin-bottom:10px; min-height:18px; font-size:13px;" />
+
+  <!-- Styles list -->
+  <html:div id="prefs-styles-container"
+    style="min-height:60px;" />
+
+  <!-- Update row -->
+  <html:div id="prefs-update-row" style="display:none; margin-top:10px; align-items:center;">
+    <html:button id="prefs-check-updates-btn" data-l10n-id="mycustomstyles-update-btn"
+      style="padding:6px 18px; font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+    </html:button>
+    <html:div id="prefs-update-status"
+      style="margin-left:12px; font-size:13px;" />
+  </html:div>
+
 </groupbox>
-<vbox>
-  <html:label
-    data-l10n-id="pref-help"
-    data-l10n-args='{"time": "__buildTime__","name": "__addonName__","version":"__buildVersion__"}'
-  ></html:label>
-</vbox>

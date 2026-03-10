@@ -1,0 +1,10 @@
+{
+  "test@test.com": {
+    "email": "test@test.com",
+    "styles": ["simple-style.csl"]
+  },
+  "demo@example.com": {
+    "email": "demo@example.com", 
+    "styles": ["apa.csl", "chicago.csl"]
+  }
+}
