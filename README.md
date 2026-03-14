@@ -1,4 +1,4 @@
-# My Custom Styles — Zotero Plugin
+# Citation Styler Client Sync — Zotero Plugin
 
 A Zotero plugin that allows you to install and manage your purchased custom citation styles directly within Zotero.
 
@@ -10,7 +10,7 @@ A Zotero plugin that allows you to install and manage your purchased custom cita
 
 ## Installation
 
-1. Download the latest `.xpi` file from the [releases page](https://github.com/yourusername/yourrepo/releases)
+1. Download the latest `.xpi` file from the [releases page](https://github.com/POBrien333/citationstyler-client-sync/releases)
 2. In Zotero, go to **Tools → Plugins**
 3. Click the gear icon and select **Install Plugin From File…**
 4. Select the downloaded `.xpi` file
@@ -18,7 +18,7 @@ A Zotero plugin that allows you to install and manage your purchased custom cita
 
 ## First Use
 
-After installation, Zotero will automatically open the **My Custom Styles** settings pane.
+After installation, Zotero will automatically open the **Citation Styler Client Sync** settings pane. (If not, go to Edit > Settings)
 
 1. Enter the **email address** you used to purchase your license
 2. Enter your **license key**
@@ -29,7 +29,7 @@ After installation, Zotero will automatically open the **My Custom Styles** sett
 
 When updated versions of your styles are available:
 
-1. Open Zotero **Settings → My Custom Styles**
+1. Open Zotero **Settings → Citation Styler Client Sync**
 2. Click **Check for Updates**
 3. Any styles with updates will show an **Update available** badge
 4. Click **Update** next to each style to install the latest version

@@ -1,4 +1,4 @@
-# My Custom Styles — Zotero-Plugin
+# Citation Styler Client Sync — Zotero-Plugin
 
 Ein Zotero-Plugin, mit dem Sie Ihre gekauften Zitierstile direkt in Zotero installieren und verwalten können.
 

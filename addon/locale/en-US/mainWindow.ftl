@@ -1,1 +1,1 @@
-mycustomstyles-menu-item-label = My Custom Styles
+citationstyler-sync-menu-item-label = My Custom Styles

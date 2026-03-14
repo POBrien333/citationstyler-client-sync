@@ -1,15 +1,15 @@
 <linkset>
-  <html:link rel="localization" href="mycustomstyles-preferences.ftl" />
+  <html:link rel="localization" href="citationstyler-sync-preferences.ftl" />
 </linkset>
 
 <groupbox
   onload="Zotero.__addonInstance__.hooks.onPrefsEvent('load', { window })"
 >
-  <label><html:h2 data-l10n-id="mycustomstyles-prefs-title"></html:h2></label>
+  <label><html:h2 data-l10n-id="citationstyler-sync-prefs-title"></html:h2></label>
 
   <!-- Email -->
   <hbox align="center" style="margin-bottom:8px;">
-    <html:label data-l10n-id="mycustomstyles-email-label"
+    <html:label data-l10n-id="citationstyler-sync-email-label"
       style="min-width:120px; font-weight:600; font-size:13px;"></html:label>
     <html:input id="prefs-email-input" type="email"
       style="flex:1; padding:6px 10px; border:1px solid #ccc; border-radius:4px; font-size:13px;" />
@@ -17,7 +17,7 @@
 
   <!-- License Key -->
   <hbox align="center" style="margin-bottom:12px;">
-    <html:label data-l10n-id="mycustomstyles-license-label"
+    <html:label data-l10n-id="citationstyler-sync-license-label"
       style="min-width:120px; font-weight:600; font-size:13px;"></html:label>
     <html:input id="prefs-license-input" type="text"
       style="flex:1; padding:6px 10px; border:1px solid #ccc; border-radius:4px; font-family:monospace; font-size:13px;" />
@@ -25,10 +25,10 @@
 
   <!-- Buttons -->
   <hbox align="center" style="margin-bottom:14px; gap:8px;">
-    <html:button id="prefs-verify-btn" data-l10n-id="mycustomstyles-verify-btn"
+    <html:button id="prefs-verify-btn" data-l10n-id="citationstyler-sync-verify-btn"
       style="padding:6px 18px; font-weight:600; font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center;">
     </html:button>
-    <html:button id="prefs-logout-btn" data-l10n-id="mycustomstyles-clear-btn"
+    <html:button id="prefs-logout-btn" data-l10n-id="citationstyler-sync-clear-btn"
       style="padding:6px 18px; font-size:13px; font-weight:600; color:#888; border:1px solid #ccc; background:transparent; cursor:pointer; display:flex; align-items:center; justify-content:center;">
     </html:button>
   </hbox>
@@ -43,7 +43,7 @@
 
   <!-- Update row -->
   <html:div id="prefs-update-row" style="display:none; margin-top:10px; align-items:center;">
-    <html:button id="prefs-check-updates-btn" data-l10n-id="mycustomstyles-update-btn"
+    <html:button id="prefs-check-updates-btn" data-l10n-id="citationstyler-sync-update-btn"
       style="padding:6px 18px; font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center;">
     </html:button>
     <html:div id="prefs-update-status"

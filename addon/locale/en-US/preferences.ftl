@@ -1,7 +1,7 @@
 pref-title = My Custom Styles
-mycustomstyles-prefs-title = My Custom Styles
-mycustomstyles-email-label = Email
-mycustomstyles-license-label = License Key
-mycustomstyles-verify-btn = Verify License
-mycustomstyles-clear-btn = Clear Credentials
-mycustomstyles-update-btn = Check for Updates
+citationstyler-sync-prefs-title = My Custom Styles
+citationstyler-sync-email-label = Email
+citationstyler-sync-license-label = License Key
+citationstyler-sync-verify-btn = Verify License
+citationstyler-sync-clear-btn = Clear Credentials
+citationstyler-sync-update-btn = Check for Updates
