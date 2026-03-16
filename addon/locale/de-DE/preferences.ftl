@@ -1,5 +1,5 @@
-pref-title = Meine Zitierstile
-citationstyler-sync-prefs-title = Meine Zitierstile
+pref-title = Citation Styler
+citationstyler-sync-prefs-title = Citation Styler
 citationstyler-sync-email-label = E-Mail
 citationstyler-sync-license-label = Lizenzschlüssel
 citationstyler-sync-verify-btn = Lizenz prüfen

@@ -1,1 +1,1 @@
-citationstyler-sync-menu-item-label = Meine Zitierstile
+citationstyler-sync-menu-item-label = Citation Styler

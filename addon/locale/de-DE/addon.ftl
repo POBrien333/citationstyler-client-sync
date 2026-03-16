@@ -1,3 +1,3 @@
-startup-begin = My Custom Styles wird geladen
-startup-finish = My Custom Styles ist bereit
-prefs-title = Meine Zitierstile
+startup-begin = Citation Styler wird geladen
+startup-finish = Citation Styler ist bereit
+prefs-title = Citation Styler
