@@ -2,7 +2,8 @@
 
 A Zotero plugin that allows you to install and manage your purchased custom citation styles directly within Zotero.
 
-Please download the latest version of the plugin here: [https://github.com/POBrien333/citationstyler-client-sync/releases](https://github.com/POBrien333/citationstyler-client-sync/releases)
+Please download the latest version of the plugin here:
+[https://github.com/POBrien333/citationstyler-client-sync/releases](https://github.com/POBrien333/citationstyler-client-sync/releases)
 
 ![Citation Styler Client Sync - install, update, reinstall](./assets/screenshots/Citation%20Styler%20Client%20Sync%20-%20install,%20update,%20reinstall.png)
 
