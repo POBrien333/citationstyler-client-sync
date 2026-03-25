@@ -1,5 +1,5 @@
 pref-title = Citation Styler
-citationstyler-sync-prefs-title = Citation Styler
+citationstyler-sync-prefs-title = Citation Styler Client Sync
 citationstyler-sync-email-label = Email
 citationstyler-sync-license-label = License Key
 citationstyler-sync-verify-btn = Verify License

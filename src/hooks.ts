@@ -1,6 +1,8 @@
+import { version }               from "../package.json";
 import { customStylesManager } from "./modules/customStyles";
 import { licenseManager }       from "./modules/license";
 import { getString, initLocale } from "./utils/locale";
+import { getColors, isDarkMode } from "./utils/theme";
 import { createZToolkit }        from "./utils/ztoolkit";
 
 
@@ -13,11 +15,15 @@ async function onStartup() {
 
   initLocale();
 
+  const mainWin = Zotero.getMainWindows()[0] as unknown as Window;
+  const dark    = mainWin ? isDarkMode(mainWin) : false;
+  const icon    = dark ? "citation-styler-favicon-96-white.png" : "favicon.png";
+
   Zotero.PreferencePanes.register({
     pluginID: addon.data.config.addonID,
     src: rootURI + "content/preferences.xhtml",
     label: getString("prefs-title"),
-    image: `chrome://${addon.data.config.addonRef}/content/icons/favicon.png`,
+    image: `chrome://${addon.data.config.addonRef}/content/icons/${icon}`,
   });
 
   await Promise.all(
@@ -75,7 +81,14 @@ async function onPrefsEvent(type: string, data: { [key: string]: any }) {
 
   await new Promise(resolve => data.window.setTimeout(resolve, 100));
 
-  const doc: Document = data.window.document;
+  const win: Window   = data.window;
+  const doc: Document = win.document;
+
+  const versionEl       = doc.getElementById("prefs-version")           as HTMLElement;
+  if (versionEl) {
+    versionEl.textContent = `v${version}`;
+    versionEl.style.color = getColors(win).mutedText;
+  }
 
   const verifyBtn       = doc.getElementById("prefs-verify-btn")       as HTMLElement;
   const emailInput      = doc.getElementById("prefs-email-input")       as HTMLInputElement;
@@ -120,39 +133,38 @@ async function onPrefsEvent(type: string, data: { [key: string]: any }) {
   const zoteroUserId = licenseManager.getZoteroUserId();
   if (!zoteroUserId) {
     statusDiv.textContent = getString("status-no-zotero");
-    statusDiv.style.color = "#dc3545";
+    statusDiv.style.color = getColors(win).error;
   }
 
   // ── Load from cache if credentials already saved ──────────────────────────
-if (saved && zoteroUserId) {
+  if (saved && zoteroUserId) {
     try {
-        const cached = await licenseManager.validate(
-            { email: saved.email, licenseKey: saved.licenseKey, zoteroUserId },
-            false
-        );
-        if (cached.valid) {
-            if (cached.fromGrace) {
-                statusDiv.textContent = getString("status-grace-period");
-                statusDiv.style.color = "#fd7e14";
-            } else if (licenseManager.isCacheExpiringSoon()) {
-                statusDiv.textContent = getString("status-verified-soon");
-                statusDiv.style.color = "#fd7e14";
-            } else {
-                statusDiv.textContent = getString("status-verified");
-                statusDiv.style.color = "#28a745";
-            }
-            await customStylesManager.renderStylesInPrefs(
-                doc, stylesContainer, statusDiv, cached, saved.licenseKey
-            );
-            showUpdateRow();
+      const cached = await licenseManager.validate(
+        { email: saved.email, licenseKey: saved.licenseKey, zoteroUserId },
+        false
+      );
+      if (cached.valid) {
+        if (cached.fromGrace) {
+          statusDiv.textContent = getString("status-grace-period");
+          statusDiv.style.color = getColors(win).warning;
+        } else if (licenseManager.isCacheExpiringSoon()) {
+          statusDiv.textContent = getString("status-verified-soon");
+          statusDiv.style.color = getColors(win).warning;
+        } else {
+          statusDiv.textContent = getString("status-verified");
+          statusDiv.style.color = getColors(win).success;
         }
+        await customStylesManager.renderStylesInPrefs(
+          doc, win, stylesContainer, statusDiv, cached, saved.licenseKey
+        );
+        showUpdateRow();
+      }
     } catch (e) {
-        ztoolkit.log("❌ Cache load error:", e);
-        statusDiv.textContent = getString("status-cache-error");
-        statusDiv.style.color = "#dc3545";
+      ztoolkit.log("❌ Cache load error:", e);
+      statusDiv.textContent = getString("status-cache-error");
+      statusDiv.style.color = getColors(win).error;
     }
-}
-
+  }
 
   // ── Verify button ─────────────────────────────────────────────────────────
   verifyBtn.addEventListener("click", async () => {
@@ -161,24 +173,24 @@ if (saved && zoteroUserId) {
 
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       statusDiv.textContent = getString("status-invalid-email");
-      statusDiv.style.color = "#dc3545";
+      statusDiv.style.color = getColors(win).error;
       return;
     }
     if (!licenseKey) {
       statusDiv.textContent = getString("status-missing-license");
-      statusDiv.style.color = "#dc3545";
+      statusDiv.style.color = getColors(win).error;
       return;
     }
 
     const zoteroUserId = licenseManager.getZoteroUserId();
     if (!zoteroUserId) {
       statusDiv.textContent = getString("status-no-zotero");
-      statusDiv.style.color = "#dc3545";
+      statusDiv.style.color = getColors(win).error;
       return;
     }
 
     statusDiv.textContent     = getString("status-verifying");
-    statusDiv.style.color     = "#888";
+    statusDiv.style.color     = getColors(win).neutral;
     stylesContainer.innerHTML = "";
     hideUpdateRow();
 
@@ -190,21 +202,21 @@ if (saved && zoteroUserId) {
 
       if (!result.valid) {
         statusDiv.textContent = result.reason ?? getString("status-validation-failed");
-        statusDiv.style.color = "#dc3545";
+        statusDiv.style.color = getColors(win).error;
         return;
       }
 
       licenseManager.saveCredentials(email, licenseKey);
 
       await customStylesManager.renderStylesInPrefs(
-        doc, stylesContainer, statusDiv, result, licenseKey
+        doc, win, stylesContainer, statusDiv, result, licenseKey
       );
 
       showUpdateRow();
     } catch (e) {
       ztoolkit.log("❌ Verify error:", e);
       statusDiv.textContent = getString("status-verify-error");
-      statusDiv.style.color = "#dc3545";
+      statusDiv.style.color = getColors(win).error;
     }
   });
 
@@ -215,30 +227,30 @@ if (saved && zoteroUserId) {
 
     if (!email || !licenseKey) {
       updateStatus.textContent = getString("status-missing-credentials");
-      updateStatus.style.color = "#dc3545";
+      updateStatus.style.color = getColors(win).error;
       return;
     }
 
     updateStatus.textContent = getString("status-verifying");
-    updateStatus.style.color = "#888";
+    updateStatus.style.color = getColors(win).neutral;
 
     try {
       const updatedCount = await customStylesManager.checkAndInstallUpdates(
-        doc, stylesContainer, statusDiv, licenseKey
+        doc, win, stylesContainer, statusDiv, licenseKey
       );
 
       if (updatedCount === 0) {
         updateStatus.textContent = getString("status-all-uptodate");
-        updateStatus.style.color = "#28a745";
+        updateStatus.style.color = getColors(win).success;
       } else {
         updateStatus.textContent = getString("status-updates-available", {
           args: { count: updatedCount },
         });
-        updateStatus.style.color = "#fd7e14";
+        updateStatus.style.color = getColors(win).warning;
       }
     } catch (e) {
       updateStatus.textContent = getString("status-update-failed");
-      updateStatus.style.color = "#dc3545";
+      updateStatus.style.color = getColors(win).error;
     }
   });
 
@@ -249,7 +261,7 @@ if (saved && zoteroUserId) {
     licenseInput.value        = "";
     stylesContainer.innerHTML = "";
     statusDiv.textContent     = getString("status-credentials-cleared");
-    statusDiv.style.color     = "#888";
+    statusDiv.style.color     = getColors(win).neutral;
     hideUpdateRow();
   });
 }

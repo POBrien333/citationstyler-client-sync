@@ -1,4 +1,5 @@
 import { getString }               from "../utils/locale";
+import { getColors }               from "../utils/theme";
 import { API_BASE, LicenseStatus } from "./license";
 
 interface StyleData {
@@ -111,6 +112,7 @@ class CustomStylesManager {
 
   public async checkAndInstallUpdates(
     doc: Document,
+    win: Window,
     container: HTMLElement,
     statusEl: HTMLElement,
     licenseKey: string
@@ -125,21 +127,21 @@ class CustomStylesManager {
 
     container.innerHTML = "";
     for (const style of styles) {
-      const row = this.buildStyleRow(doc, style, async (s, btn) => {
+      const row = this.buildStyleRow(doc, win, style, async (s, btn) => {
         btn.textContent = getString("btn-installing");
         btn.setAttribute("disabled", "true");
         try {
           const content = await this.fetchRemoteStyleContent(s.id, licenseKey, s.hash);
           await this.installStyleToZotero(s.id, content);
           statusEl.textContent = getString("status-updated-ok", { args: { name: s.name } });
-          statusEl.style.color = "#28a745";
-          await this.checkAndInstallUpdates(doc, container, statusEl, licenseKey);
+          statusEl.style.color = getColors(win).success;
+          await this.checkAndInstallUpdates(doc, win, container, statusEl, licenseKey);
         } catch (e) {
           btn.textContent       = getString("btn-failed");
-          btn.style.borderColor = "#dc3545";
+          btn.style.borderColor = getColors(win).error;
           btn.removeAttribute("disabled");
           statusEl.textContent  = getString("status-install-failed", { args: { name: s.name } });
-          statusEl.style.color  = "#dc3545";
+          statusEl.style.color  = getColors(win).error;
         }
       });
       container.appendChild(row);
@@ -152,12 +154,14 @@ class CustomStylesManager {
 
   private buildStyleRow(
     doc: Document,
+    win: Window,
     style: StyleData,
     onInstall: (style: StyleData, btn: HTMLElement, row: HTMLElement) => Promise<void>
   ): HTMLElement {
     const status        = this.getStyleStatus(style);
     const installedDate = this.getInstalledStyleDate(style.id);
     const fmt           = (d: Date | null) => d ? d.toISOString().split('T')[0] : "unknown";
+    const c             = getColors(win);
 
     const styleRow = doc.createElement("div");
     Object.assign(styleRow.style, {
@@ -165,10 +169,10 @@ class CustomStylesManager {
       alignItems:      "center",
       justifyContent:  "space-between",
       padding:         "10px 8px",
-      borderBottom:    "1px solid #eee",
+      borderBottom:    `1px solid ${c.rowBorder}`,
       backgroundColor:
-        status === "not-installed"    ? "white"   :
-        status === "update-available" ? "#fff8f0" : "#f0fff4",
+        status === "not-installed"    ? c.rowBg     :
+        status === "update-available" ? c.rowBgWarn : c.rowBgOk,
     });
 
     const leftContainer = doc.createElement("div");
@@ -195,8 +199,8 @@ class CustomStylesManager {
       fontSize:   "16px",
       flexShrink: "0",
       color:
-        status === "not-installed"    ? "#adb5bd" :
-        status === "update-available" ? "#fd7e14"  : "#28a745",
+        status === "not-installed"    ? c.mutedText :
+        status === "update-available" ? c.warning   : c.success,
     });
 
     const styleName = doc.createElement("span");
@@ -211,9 +215,9 @@ class CustomStylesManager {
       badge.textContent = getString("badge-latest");
       Object.assign(badge.style, {
         fontSize:        "11px",
-        color:           "#28a745",
-        backgroundColor: "#e6f9ee",
-        border:          "1px solid #b7ebc8",
+        color:           c.success,
+        backgroundColor: c.badgeOkBg,
+        border:          `1px solid ${c.badgeOkBdr}`,
         borderRadius:    "10px",
         padding:         "1px 8px",
         fontWeight:      "500",
@@ -228,9 +232,9 @@ class CustomStylesManager {
       badge.textContent = getString("badge-update");
       Object.assign(badge.style, {
         fontSize:        "11px",
-        color:           "#fd7e14",
-        backgroundColor: "#fff3e0",
-        border:          "1px solid #ffd08a",
+        color:           c.warning,
+        backgroundColor: c.badgeUpdBg,
+        border:          `1px solid ${c.badgeUpdBdr}`,
         borderRadius:    "10px",
         padding:         "1px 8px",
         fontWeight:      "500",
@@ -251,21 +255,21 @@ class CustomStylesManager {
 
     if (status === "not-installed") {
       dateInfo.textContent = getString("date-available", { args: { date: fmt(style.remoteDate) } });
-      dateInfo.style.color = "#adb5bd";
+      dateInfo.style.color = c.mutedText;
     } else if (status === "update-available") {
       dateInfo.textContent = getString("date-update", {
         args: { installedDate: fmt(installedDate), newDate: fmt(style.remoteDate) },
       });
-      dateInfo.style.color = "#fd7e14";
+      dateInfo.style.color = c.warning;
     } else {
       dateInfo.textContent = getString("date-installed", { args: { date: fmt(installedDate) } });
-      dateInfo.style.color = "#adb5bd";
+      dateInfo.style.color = c.mutedText;
     }
     leftContainer.appendChild(dateInfo);
 
     const btnColor =
-      status === "not-installed"    ? "#28a745" :
-      status === "update-available" ? "#fd7e14"  : "#6c757d";
+      status === "not-installed"    ? c.success     :
+      status === "update-available" ? c.warning     : c.btnDisabled;
     const btnLabel =
       status === "not-installed"    ? getString("btn-install")   :
       status === "update-available" ? getString("btn-update")    :
@@ -277,7 +281,7 @@ class CustomStylesManager {
     Object.assign(installButton.style, {
       padding:         "5px 14px",
       backgroundColor: "transparent",
-      color:           "black",
+      color:           c.btnText,
       border:          `2px solid ${btnColor}`,
       borderRadius:    "4px",
       cursor:          "pointer",
@@ -306,6 +310,7 @@ class CustomStylesManager {
 
   public async renderStylesInPrefs(
     doc: Document,
+    win: Window,
     container: HTMLElement,
     statusEl: HTMLElement,
     licenseStatus: LicenseStatus,
@@ -313,13 +318,13 @@ class CustomStylesManager {
   ) {
     container.innerHTML  = "";
     statusEl.textContent = getString("status-loading-styles");
-    statusEl.style.color = "#888";
+    statusEl.style.color = getColors(win).neutral;
 
     const styles = await this.fetchRemoteStyles(licenseKey);
 
     if (styles.length === 0) {
       statusEl.textContent = getString("status-no-styles");
-      statusEl.style.color = "#dc3545";
+      statusEl.style.color = getColors(win).error;
       return;
     }
 
@@ -327,28 +332,28 @@ class CustomStylesManager {
       styles.length === 1 ? "status-styles-found" : "status-styles-found-plural",
       { args: { count: styles.length } }
     );
-    statusEl.style.color = "#28a745";
+    statusEl.style.color = getColors(win).success;
     container.innerHTML  = "";
 
     const render = () => {
       container.innerHTML = "";
       for (const style of styles) {
-        const row = this.buildStyleRow(doc, style, async (s, btn) => {
+        const row = this.buildStyleRow(doc, win, style, async (s, btn) => {
           btn.textContent = getString("btn-installing");
           btn.setAttribute("disabled", "true");
           try {
             const content = await this.fetchRemoteStyleContent(s.id, licenseKey, s.hash);
             await this.installStyleToZotero(s.id, content);
             statusEl.textContent = getString("status-installed-ok", { args: { name: s.name } });
-            statusEl.style.color = "#28a745";
+            statusEl.style.color = getColors(win).success;
             render();
           } catch (e) {
             ztoolkit.log("❌ Install error:", e);
             btn.textContent       = getString("btn-failed");
-            btn.style.borderColor = "#dc3545";
+            btn.style.borderColor = getColors(win).error;
             btn.removeAttribute("disabled");
             statusEl.textContent  = getString("status-install-failed", { args: { name: s.name } });
-            statusEl.style.color  = "#dc3545";
+            statusEl.style.color  = getColors(win).error;
           }
         });
         container.appendChild(row);

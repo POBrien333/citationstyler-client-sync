@@ -5,7 +5,10 @@
 <groupbox
   onload="Zotero.__addonInstance__.hooks.onPrefsEvent('load', { window })"
 >
-  <label><html:h2 data-l10n-id="citationstyler-sync-prefs-title"></html:h2></label>
+  <html:div style="display:flex; align-items:baseline; gap:10px; margin-bottom:4px;">
+    <html:h2 data-l10n-id="citationstyler-sync-prefs-title" style="margin:0;"></html:h2>
+    <html:span id="prefs-version" style="font-size:12px;"></html:span>
+  </html:div>
 
   <!-- Email -->
   <hbox align="center" style="margin-bottom:8px;">
