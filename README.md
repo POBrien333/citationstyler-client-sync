@@ -53,3 +53,25 @@ When updated versions of your styles are available:
 ## Support
 
 For license issues or support, please contact: info@citationstyler.com
+
+---
+
+## Changelog
+
+### v1.0.2
+- Dark mode support: all UI elements now adapt to Zotero's light/dark theme
+- Sidebar icon switches to a white variant in dark mode
+- Preferences pane heading updated to "Citation Styler Client Sync" with version number displayed
+- Added "Copy Logs" button alongside the license buttons — click it to copy diagnostic information to your clipboard when contacting support
+
+### v1.0.1
+- Plugin rebranded to "Citation Styler" / "Citation Styler Client Sync"
+- Improved "no styles available" error message to direct users to support
+- Various stability and build improvements
+
+### v1.0.0
+- Initial release
+- License validation via email and license key
+- Browse, install, and update purchased citation styles within Zotero
+- Offline support via cache and grace period
+- Auto-opens settings on first install

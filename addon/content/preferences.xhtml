@@ -27,16 +27,20 @@
   </hbox>
 
   <!-- Buttons -->
-  <hbox align="center" style="margin-bottom:14px; gap:8px;">
+  <hbox align="center" style="margin-bottom:6px; gap:8px;">
     <html:button id="prefs-verify-btn" data-l10n-id="citationstyler-sync-verify-btn"
       style="padding:6px 18px; font-weight:600; font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center;">
     </html:button>
     <html:button id="prefs-logout-btn" data-l10n-id="citationstyler-sync-clear-btn"
       style="padding:6px 18px; font-size:13px; font-weight:600; color:#888; border:1px solid #ccc; background:transparent; cursor:pointer; display:flex; align-items:center; justify-content:center;">
     </html:button>
+    <html:button id="prefs-copy-logs-btn" data-l10n-id="citationstyler-sync-copy-logs-btn"
+      style="padding:6px 14px; font-size:13px; font-weight:600; color:#888; border:1px solid #ccc; background:transparent; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+    </html:button>
   </hbox>
 
-  <!-- Status -->
+  <!-- Status / logs feedback -->
+  <html:div id="prefs-logs-status" style="margin-bottom:4px; min-height:16px; font-size:12px;" />
   <html:div id="prefs-status"
     style="margin-bottom:10px; min-height:18px; font-size:13px;" />
 

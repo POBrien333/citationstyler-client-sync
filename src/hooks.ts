@@ -1,9 +1,10 @@
-import { version }               from "../package.json";
-import { customStylesManager } from "./modules/customStyles";
-import { licenseManager }       from "./modules/license";
-import { getString, initLocale } from "./utils/locale";
-import { getColors, isDarkMode } from "./utils/theme";
-import { createZToolkit }        from "./utils/ztoolkit";
+import { version }                    from "../package.json";
+import { customStylesManager }       from "./modules/customStyles";
+import { licenseManager }            from "./modules/license";
+import { getString, initLocale }     from "./utils/locale";
+import { csLog, getFormattedLogs }   from "./utils/logger";
+import { getColors, isDarkMode }     from "./utils/theme";
+import { createZToolkit }            from "./utils/ztoolkit";
 
 
 async function onStartup() {
@@ -38,6 +39,7 @@ async function onStartup() {
     Zotero.Utilities.Internal.openPreferences(addon.data.config.addonRef);
   }
 
+  csLog("INFO", `Plugin started — version ${version}`);
   addon.data.initialized = true;
 }
 
@@ -101,7 +103,7 @@ async function onPrefsEvent(type: string, data: { [key: string]: any }) {
   const updateStatus    = doc.getElementById("prefs-update-status")     as HTMLElement;
 
   if (!verifyBtn || !emailInput || !licenseInput || !statusDiv || !stylesContainer) {
-    ztoolkit.log("❌ Prefs elements not found");
+    csLog("ERROR", "Prefs elements not found — preferences pane may not have loaded correctly");
     return;
   }
 
@@ -122,16 +124,22 @@ async function onPrefsEvent(type: string, data: { [key: string]: any }) {
   emailInput.placeholder   = getString("email-placeholder");
   licenseInput.placeholder = getString("license-placeholder");
 
+  csLog("INFO", "Preferences pane loaded");
+
   // ── Pre-fill saved credentials ────────────────────────────────────────────
   const saved = licenseManager.loadCredentials();
   if (saved) {
+    csLog("INFO", "Saved credentials found — attempting cache validation");
     emailInput.value   = saved.email;
     licenseInput.value = saved.licenseKey;
+  } else {
+    csLog("INFO", "No saved credentials");
   }
 
   // ── Warn if not logged into Zotero (never disable the button) ────────────
   const zoteroUserId = licenseManager.getZoteroUserId();
   if (!zoteroUserId) {
+    csLog("WARN", "No Zotero user ID — user may not be logged in");
     statusDiv.textContent = getString("status-no-zotero");
     statusDiv.style.color = getColors(win).error;
   }
@@ -160,7 +168,7 @@ async function onPrefsEvent(type: string, data: { [key: string]: any }) {
         showUpdateRow();
       }
     } catch (e) {
-      ztoolkit.log("❌ Cache load error:", e);
+      csLog("ERROR", "Cache load error:", e);
       statusDiv.textContent = getString("status-cache-error");
       statusDiv.style.color = getColors(win).error;
     }
@@ -170,6 +178,7 @@ async function onPrefsEvent(type: string, data: { [key: string]: any }) {
   verifyBtn.addEventListener("click", async () => {
     const email      = emailInput.value.trim();
     const licenseKey = licenseInput.value.trim();
+    csLog("INFO", `Verify button clicked — key length: ${licenseKey.length}`);
 
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       statusDiv.textContent = getString("status-invalid-email");
@@ -201,11 +210,13 @@ async function onPrefsEvent(type: string, data: { [key: string]: any }) {
       );
 
       if (!result.valid) {
+        csLog("WARN", `Verification failed: ${result.reason}`);
         statusDiv.textContent = result.reason ?? getString("status-validation-failed");
         statusDiv.style.color = getColors(win).error;
         return;
       }
 
+      csLog("INFO", "Credentials saved after successful verification");
       licenseManager.saveCredentials(email, licenseKey);
 
       await customStylesManager.renderStylesInPrefs(
@@ -214,7 +225,7 @@ async function onPrefsEvent(type: string, data: { [key: string]: any }) {
 
       showUpdateRow();
     } catch (e) {
-      ztoolkit.log("❌ Verify error:", e);
+      csLog("ERROR", "Verify error:", e);
       statusDiv.textContent = getString("status-verify-error");
       statusDiv.style.color = getColors(win).error;
     }
@@ -239,6 +250,7 @@ async function onPrefsEvent(type: string, data: { [key: string]: any }) {
         doc, win, stylesContainer, statusDiv, licenseKey
       );
 
+      csLog("INFO", `Update check complete — ${updatedCount} updates available`);
       if (updatedCount === 0) {
         updateStatus.textContent = getString("status-all-uptodate");
         updateStatus.style.color = getColors(win).success;
@@ -256,6 +268,7 @@ async function onPrefsEvent(type: string, data: { [key: string]: any }) {
 
   // ── Clear Credentials button ──────────────────────────────────────────────
   logoutBtn?.addEventListener("click", () => {
+    csLog("INFO", "Credentials cleared by user");
     licenseManager.clearCredentials();
     emailInput.value          = "";
     licenseInput.value        = "";
@@ -263,6 +276,31 @@ async function onPrefsEvent(type: string, data: { [key: string]: any }) {
     statusDiv.textContent     = getString("status-credentials-cleared");
     statusDiv.style.color     = getColors(win).neutral;
     hideUpdateRow();
+  });
+
+  // ── Copy Logs button ──────────────────────────────────────────────────────
+  const copyLogsBtn   = doc.getElementById("prefs-copy-logs-btn")  as HTMLElement;
+  const logsStatusDiv = doc.getElementById("prefs-logs-status")    as HTMLElement;
+
+  copyLogsBtn?.addEventListener("click", async () => {
+    const text = getFormattedLogs();
+    try {
+      await (win as any).navigator.clipboard.writeText(text);
+    } catch {
+      // Fallback for chrome:// contexts
+      const ta = doc.createElement("textarea");
+      ta.value = text;
+      doc.documentElement!.appendChild(ta);
+      (ta as any).select();
+      doc.execCommand("copy");
+      doc.documentElement!.removeChild(ta);
+    }
+    csLog("INFO", "Log export copied to clipboard by user");
+    if (logsStatusDiv) {
+      logsStatusDiv.textContent = getString("status-logs-copied");
+      logsStatusDiv.style.color = getColors(win).success;
+      win.setTimeout(() => { logsStatusDiv.textContent = ""; }, 3000);
+    }
   });
 }
 

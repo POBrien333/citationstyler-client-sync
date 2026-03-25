@@ -5,3 +5,4 @@ citationstyler-sync-license-label = License Key
 citationstyler-sync-verify-btn = Verify License
 citationstyler-sync-clear-btn = Clear Credentials
 citationstyler-sync-update-btn = Check for Updates
+citationstyler-sync-copy-logs-btn = Copy Logs

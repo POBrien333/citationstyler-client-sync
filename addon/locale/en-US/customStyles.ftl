@@ -24,6 +24,7 @@ status-all-uptodate = ✓ All styles are up to date.
 status-updates-available = { $count } update(s) available — click Update to install.
 status-update-failed = Update check failed. Please try again.
 status-missing-credentials = Missing credentials.
+status-logs-copied = ✓ Logs copied to clipboard
 status-grace-period = License server unreachable — showing your styles from last verified session. Please reconnect to revalidate.
 
 # ── Style row ────────────────────────────────────────────────────

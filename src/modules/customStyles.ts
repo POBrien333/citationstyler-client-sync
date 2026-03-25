@@ -1,5 +1,6 @@
 import { getString }               from "../utils/locale";
 import { getColors }               from "../utils/theme";
+import { csLog }                   from "../utils/logger";
 import { API_BASE, LicenseStatus } from "./license";
 
 interface StyleData {
@@ -36,11 +37,13 @@ class CustomStylesManager {
   }
 
   private async fetchRemoteStyles(licenseKey: string): Promise<StyleData[]> {
+    csLog("INFO", "Fetching remote styles list");
     try {
       const response = await this.fetchWithTimeout(
         `${API_BASE}/styles?license_key=${encodeURIComponent(licenseKey)}`
       );
       const styles = response.response as unknown as any[];
+      csLog("INFO", `Remote styles fetched: ${(styles as any[]).length} styles`);
       return styles.map((s: any) => ({
         id:         s.id,
         name:       s.name,
@@ -48,7 +51,7 @@ class CustomStylesManager {
         hash:       s.hash ?? '',
       }));
     } catch (e) {
-      ztoolkit.log("❌ fetchRemoteStyles error:", e);
+      csLog("ERROR", "fetchRemoteStyles error:", e);
       return [];
     }
   }
@@ -66,7 +69,7 @@ class CustomStylesManager {
 
     const actualHash = await this.computeSHA256(data.content);
     if (actualHash !== expectedHash) {
-      ztoolkit.log(`❌ Hash mismatch for ${styleId}: expected ${expectedHash}, got ${actualHash}`);
+      csLog("ERROR", `Hash mismatch for ${styleId}: expected ${expectedHash}, got ${actualHash}`);
       throw new Error("File integrity check failed. Please try again or contact support.");
     }
 
@@ -84,7 +87,7 @@ class CustomStylesManager {
       const parsed = new Date(installedStyle.updated.replace(' ', 'T') + 'Z');
       return isNaN(parsed.getTime()) ? null : parsed;
     } catch (e) {
-      ztoolkit.log("❌ getInstalledStyleDate error:", e);
+      csLog("ERROR", "getInstalledStyleDate error:", e);
       return null;
     }
   }
@@ -97,13 +100,14 @@ class CustomStylesManager {
   }
 
   async installStyleToZotero(styleId: string, styleContent: string) {
+    csLog("INFO", `Installing style: ${styleId}`);
     try {
       const zotero = ztoolkit.getGlobal("Zotero");
       if (!zotero) throw new Error("Zotero global not found");
       const style  = await zotero.Styles.install(styleContent, null, true);
-      ztoolkit.log(`✅ Installed style: ${style.title}`);
+      csLog("INFO", `Style installed: ${style.title}`);
     } catch (e) {
-      ztoolkit.log("❌ installStyleToZotero error:", e);
+      csLog("ERROR", "installStyleToZotero error:", e);
       throw e;
     }
   }
@@ -117,6 +121,7 @@ class CustomStylesManager {
     statusEl: HTMLElement,
     licenseKey: string
   ): Promise<number> {
+    csLog("INFO", "Checking for style updates");
     const styles = await this.fetchRemoteStyles(licenseKey);
 
     if (styles.length === 0) {
@@ -348,7 +353,7 @@ class CustomStylesManager {
             statusEl.style.color = getColors(win).success;
             render();
           } catch (e) {
-            ztoolkit.log("❌ Install error:", e);
+            csLog("ERROR", "Install error:", e);
             btn.textContent       = getString("btn-failed");
             btn.style.borderColor = getColors(win).error;
             btn.removeAttribute("disabled");

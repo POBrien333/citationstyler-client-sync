@@ -1,3 +1,5 @@
+import { csLog } from "../utils/logger";
+
 const PREF_LICENSE_KEY    = "extensions.citationstyler.licenseKey";
 const PREF_EMAIL          = "extensions.citationstyler.email";
 const PREF_ZOTERO_USER_ID = "extensions.citationstyler.zoteroUserId";
@@ -35,7 +37,7 @@ export class LicenseManager {
       const id     = zotero.Users.getCurrentUserID();
       return id ? String(id) : null;
     } catch (e) {
-      ztoolkit.log("❌ getZoteroUserId error:", e);
+      csLog("ERROR", "getZoteroUserId error:", e);
       return null;
     }
   }
@@ -118,9 +120,14 @@ export class LicenseManager {
     forceRefresh = false
   ): Promise<LicenseStatus> {
 
+    csLog("INFO", `License validation requested — forceRefresh: ${forceRefresh}`);
+
     if (!forceRefresh) {
       const cached = this.getCachedStatus();
-      if (cached) return cached;
+      if (cached) {
+        csLog("INFO", "License validation served from cache");
+        return cached;
+      }
     }
 
     if (!credentials.zoteroUserId) {
@@ -160,6 +167,7 @@ export class LicenseManager {
       };
 
       if (data.valid) {
+        csLog("INFO", `License validated via API — styles count: ${data.styles?.length ?? 0}`);
         this.setCacheValid(data.styles ?? []);
         return { valid: true, styles: data.styles ?? [] };
       } else {
@@ -169,13 +177,13 @@ export class LicenseManager {
       }
 
     } catch (e) {
-      ztoolkit.log("❌ License validation error — attempting grace period fallback:", e);
+      csLog("ERROR", "License validation error — attempting grace period fallback:", e);
 
       const grace = this.getCachedStatusWithGrace();
       if (grace) {
-        ztoolkit.log(grace.fromGrace
-          ? "⚠️ Server unreachable — serving from grace period (cache expired)"
-          : "⚠️ Server unreachable — serving from valid cache"
+        csLog("WARN", grace.fromGrace
+          ? "Server unreachable — serving from grace period (cache expired)"
+          : "Server unreachable — serving from valid cache"
         );
         return grace;
       }

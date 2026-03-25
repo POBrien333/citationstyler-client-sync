@@ -24,6 +24,7 @@ status-all-uptodate = ✓ Alle Stile sind aktuell.
 status-updates-available = { $count } Update(s) verfügbar — bitte auf „Aktualisieren" klicken.
 status-update-failed = Update-Prüfung fehlgeschlagen. Bitte erneut versuchen.
 status-missing-credentials = Zugangsdaten fehlen.
+status-logs-copied = ✓ Protokoll in Zwischenablage kopiert
 status-grace-period = Lizenzserver nicht erreichbar – es werden Ihre Stile aus der zuletzt überprüften Sitzung angezeigt. Bitte stellen Sie erneut eine Verbindung her, um die Gültigkeit zu überprüfen.
 
 
