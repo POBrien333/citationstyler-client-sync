@@ -1,40 +1,36 @@
 import { csLog } from "../utils/logger";
 
-const PREF_LICENSE_KEY    = "extensions.citationstyler.licenseKey";
-const PREF_EMAIL          = "extensions.citationstyler.email";
+const PREF_LICENSE_KEY = "extensions.citationstyler.licenseKey";
+const PREF_EMAIL = "extensions.citationstyler.email";
 const PREF_ZOTERO_USER_ID = "extensions.citationstyler.zoteroUserId";
-const PREF_CACHE_VALID    = "extensions.citationstyler.cacheValid";
-const PREF_CACHE_EXPIRY   = "extensions.citationstyler.cacheExpiry";
+const PREF_CACHE_VALID = "extensions.citationstyler.cacheValid";
+const PREF_CACHE_EXPIRY = "extensions.citationstyler.cacheExpiry";
 
-const CACHE_TTL_MS    = 14 * 24 * 60 * 60 * 1000;
-const GRACE_PERIOD_MS =  7 * 24 * 60 * 60 * 1000;
-const WARN_BEFORE_MS  =  3 * 24 * 60 * 60 * 1000;
+const CACHE_TTL_MS = 14 * 24 * 60 * 60 * 1000;
+const GRACE_PERIOD_MS = 7 * 24 * 60 * 60 * 1000;
+const WARN_BEFORE_MS = 3 * 24 * 60 * 60 * 1000;
 const REQUEST_TIMEOUT = 15_000;
 
-
 export interface LicenseCredentials {
-  email:        string;
-  licenseKey:   string;
+  email: string;
+  licenseKey: string;
   zoteroUserId: string;
 }
 
-
 export interface LicenseStatus {
-  valid:      boolean;
-  reason?:    string;
-  styles?:    string[];
+  valid: boolean;
+  reason?: string;
+  styles?: string[];
   fromGrace?: boolean;
 }
 
-
 export class LicenseManager {
-
   // ─── Zotero User ID ───────────────────────────────────────────
 
   getZoteroUserId(): string | null {
     try {
       const zotero = ztoolkit.getGlobal("Zotero");
-      const id     = zotero.Users.getCurrentUserID();
+      const id = zotero.Users.getCurrentUserID();
       return id ? String(id) : null;
     } catch (e) {
       csLog("ERROR", "getZoteroUserId error:", e);
@@ -45,12 +41,12 @@ export class LicenseManager {
   // ─── Credential Storage ───────────────────────────────────────
 
   saveCredentials(email: string, licenseKey: string) {
-    Zotero.Prefs.set(PREF_EMAIL,       email);
+    Zotero.Prefs.set(PREF_EMAIL, email);
     Zotero.Prefs.set(PREF_LICENSE_KEY, licenseKey);
   }
 
   loadCredentials(): { email: string; licenseKey: string } | null {
-    const email      = Zotero.Prefs.get(PREF_EMAIL)       as string;
+    const email = Zotero.Prefs.get(PREF_EMAIL) as string;
     const licenseKey = Zotero.Prefs.get(PREF_LICENSE_KEY) as string;
     if (!email || !licenseKey) return null;
     return { email, licenseKey };
@@ -66,7 +62,7 @@ export class LicenseManager {
   // ─── Cache ────────────────────────────────────────────────────
 
   private setCacheValid(styles: string[]) {
-    Zotero.Prefs.set(PREF_CACHE_VALID,  JSON.stringify(styles));
+    Zotero.Prefs.set(PREF_CACHE_VALID, JSON.stringify(styles));
     Zotero.Prefs.set(PREF_CACHE_EXPIRY, String(Date.now() + CACHE_TTL_MS));
   }
 
@@ -74,7 +70,7 @@ export class LicenseManager {
     try {
       const expiry = Number(Zotero.Prefs.get(PREF_CACHE_EXPIRY));
       const cached = Zotero.Prefs.get(PREF_CACHE_VALID) as string;
-      if (!expiry || !cached)  return null;
+      if (!expiry || !cached) return null;
       if (Date.now() > expiry) return null;
       return { valid: true, styles: JSON.parse(cached) };
     } catch (e) {
@@ -86,7 +82,7 @@ export class LicenseManager {
     try {
       const expiry = Number(Zotero.Prefs.get(PREF_CACHE_EXPIRY));
       const cached = Zotero.Prefs.get(PREF_CACHE_VALID) as string;
-      if (!expiry || !cached)                    return null;
+      if (!expiry || !cached) return null;
       if (Date.now() > expiry + GRACE_PERIOD_MS) return null;
       const isInGrace = Date.now() > expiry;
       return { valid: true, styles: JSON.parse(cached), fromGrace: isInGrace };
@@ -117,10 +113,12 @@ export class LicenseManager {
 
   async validate(
     credentials: LicenseCredentials,
-    forceRefresh = false
+    forceRefresh = false,
   ): Promise<LicenseStatus> {
-
-    csLog("INFO", `License validation requested — forceRefresh: ${forceRefresh}`);
+    csLog(
+      "INFO",
+      `License validation requested — forceRefresh: ${forceRefresh}`,
+    );
 
     if (!forceRefresh) {
       const cached = this.getCachedStatus();
@@ -132,71 +130,83 @@ export class LicenseManager {
 
     if (!credentials.zoteroUserId) {
       return {
-        valid:  false,
-        reason: "Please log in to your Zotero account at zotero.org to use purchased styles.",
+        valid: false,
+        reason:
+          "Please log in to your Zotero account at zotero.org to use purchased styles.",
       };
     }
 
     try {
-      const zotero  = ztoolkit.getGlobal("Zotero");
+      const zotero = ztoolkit.getGlobal("Zotero");
       const timeout = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Request timed out")), REQUEST_TIMEOUT)
+        setTimeout(
+          () => reject(new Error("Request timed out")),
+          REQUEST_TIMEOUT,
+        ),
       );
 
-      const response = await Promise.race([
-        zotero.HTTP.request(
-          "POST",
-          `${API_BASE}/license/validate`,
-          {
-            headers:      { "Content-Type": "application/json" },
-            body:         JSON.stringify({
-              email:          credentials.email,
-              license_key:    credentials.licenseKey,
-              zotero_user_id: credentials.zoteroUserId,
-            }),
-            responseType: "json",
-          }
-        ),
+      const response = (await Promise.race([
+        zotero.HTTP.request("POST", `${API_BASE}/license/validate`, {
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: credentials.email,
+            license_key: credentials.licenseKey,
+            zotero_user_id: credentials.zoteroUserId,
+          }),
+          responseType: "json",
+        }),
         timeout,
-      ]) as any;
+      ])) as any;
 
       const data = response.response as unknown as {
-        valid:   boolean;
+        valid: boolean;
         reason?: string;
         styles?: string[];
       };
 
       if (data.valid) {
-        csLog("INFO", `License validated via API — styles count: ${data.styles?.length ?? 0}`);
+        csLog(
+          "INFO",
+          `License validated via API — styles count: ${data.styles?.length ?? 0}`,
+        );
         this.setCacheValid(data.styles ?? []);
         return { valid: true, styles: data.styles ?? [] };
       } else {
         Zotero.Prefs.clear(PREF_CACHE_VALID);
         Zotero.Prefs.clear(PREF_CACHE_EXPIRY);
-        return { valid: false, reason: data.reason ?? "License validation failed." };
+        return {
+          valid: false,
+          reason: data.reason ?? "License validation failed.",
+        };
       }
-
     } catch (e) {
-      csLog("ERROR", "License validation error — attempting grace period fallback:", e);
+      csLog(
+        "ERROR",
+        "License validation error — attempting grace period fallback:",
+        e,
+      );
 
       const grace = this.getCachedStatusWithGrace();
       if (grace) {
-        csLog("WARN", grace.fromGrace
-          ? "Server unreachable — serving from grace period (cache expired)"
-          : "Server unreachable — serving from valid cache"
+        csLog(
+          "WARN",
+          grace.fromGrace
+            ? "Server unreachable — serving from grace period (cache expired)"
+            : "Server unreachable — serving from valid cache",
         );
         return grace;
       }
 
       return {
-        valid:  false,
-        reason: "Could not reach the license server. Please check your connection.",
+        valid: false,
+        reason:
+          "Could not reach the license server. Please check your connection.",
       };
     }
   }
 }
 
-
 export const licenseManager = new LicenseManager();
 
-export const API_BASE = "https://staging.citationstyler.com/wp-json/citationstyler/v1";
+export const API_BASE =
+  "https://citationstyler.com/wp-json/citationstyler/v1";

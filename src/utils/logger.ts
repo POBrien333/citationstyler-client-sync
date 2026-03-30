@@ -4,15 +4,17 @@ type LogLevel = "INFO" | "WARN" | "ERROR";
 
 interface LogEntry {
   timestamp: string;
-  level:     LogLevel;
-  message:   string;
+  level: LogLevel;
+  message: string;
 }
 
 const MAX_ENTRIES = 200;
 const buffer: LogEntry[] = [];
 
 export function csLog(level: LogLevel, ...args: unknown[]): void {
-  const message   = args.map(a => (a instanceof Error ? a.message : String(a))).join(" ");
+  const message = args
+    .map((a) => (a instanceof Error ? a.message : String(a)))
+    .join(" ");
   const timestamp = new Date().toISOString();
 
   if (buffer.length >= MAX_ENTRIES) buffer.shift();
@@ -26,14 +28,20 @@ export function csLog(level: LogLevel, ...args: unknown[]): void {
 }
 
 export function getFormattedLogs(): string {
-  const now      = new Date().toISOString();
+  const now = new Date().toISOString();
   const zVersion = (() => {
-    try { return (ztoolkit.getGlobal("Zotero") as any).version as string; }
-    catch { return "unknown"; }
+    try {
+      return (ztoolkit.getGlobal("Zotero") as any).version as string;
+    } catch {
+      return "unknown";
+    }
   })();
   const platform = (() => {
-    try { return (Services as any).appinfo.OS as string; }
-    catch { return "unknown"; }
+    try {
+      return (Services as any).appinfo.OS as string;
+    } catch {
+      return "unknown";
+    }
   })();
 
   const header = [
@@ -46,7 +54,7 @@ export function getFormattedLogs(): string {
   ].join("\n");
 
   const lines = buffer
-    .map(e => `[${e.timestamp}] [${e.level}] ${e.message}`)
+    .map((e) => `[${e.timestamp}] [${e.level}] ${e.message}`)
     .join("\n");
 
   return `${header}\n${lines || "(no log entries yet)"}`;

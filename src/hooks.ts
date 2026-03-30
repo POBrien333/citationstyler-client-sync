@@ -1,11 +1,10 @@
-import { version }                    from "../package.json";
-import { customStylesManager }       from "./modules/customStyles";
-import { licenseManager }            from "./modules/license";
-import { getString, initLocale }     from "./utils/locale";
-import { csLog, getFormattedLogs }   from "./utils/logger";
-import { getColors, isDarkMode }     from "./utils/theme";
-import { createZToolkit }            from "./utils/ztoolkit";
-
+import { version } from "../package.json";
+import { customStylesManager } from "./modules/customStyles";
+import { licenseManager } from "./modules/license";
+import { getString, initLocale } from "./utils/locale";
+import { csLog, getFormattedLogs } from "./utils/logger";
+import { getColors, isDarkMode } from "./utils/theme";
+import { createZToolkit } from "./utils/ztoolkit";
 
 async function onStartup() {
   await Promise.all([
@@ -17,8 +16,8 @@ async function onStartup() {
   initLocale();
 
   const mainWin = Zotero.getMainWindows()[0] as unknown as Window;
-  const dark    = mainWin ? isDarkMode(mainWin) : false;
-  const icon    = dark ? "citation-styler-favicon-96-white.png" : "favicon.png";
+  const dark = mainWin ? isDarkMode(mainWin) : false;
+  const icon = dark ? "citation-styler-favicon-96-white.png" : "favicon.png";
 
   Zotero.PreferencePanes.register({
     pluginID: addon.data.config.addonID,
@@ -32,17 +31,18 @@ async function onStartup() {
   );
 
   // ── Open prefs pane on first install ──────────────────────────
-  const isFirstInstall = !Zotero.Prefs.get("extensions.citationstyler.installed");
+  const isFirstInstall = !Zotero.Prefs.get(
+    "extensions.citationstyler.installed",
+  );
   if (isFirstInstall) {
     Zotero.Prefs.set("extensions.citationstyler.installed", true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
     Zotero.Utilities.Internal.openPreferences(addon.data.config.addonRef);
   }
 
   csLog("INFO", `Plugin started — version ${version}`);
   addon.data.initialized = true;
 }
-
 
 async function onMainWindowLoad(win: _ZoteroTypes.MainWindow): Promise<void> {
   addon.data.ztoolkit = createZToolkit();
@@ -52,12 +52,10 @@ async function onMainWindowLoad(win: _ZoteroTypes.MainWindow): Promise<void> {
   );
 }
 
-
 async function onMainWindowUnload(win: Window): Promise<void> {
   ztoolkit.unregisterAll();
   addon.data.dialog?.window?.close();
 }
-
 
 function onShutdown(): void {
   ztoolkit.unregisterAll();
@@ -66,7 +64,6 @@ function onShutdown(): void {
   // @ts-expect-error - Plugin instance is not typed
   delete Zotero[addon.data.config.addonInstance];
 }
-
 
 async function onNotify(
   event: string,
@@ -77,40 +74,56 @@ async function onNotify(
   ztoolkit.log("notify", event, type, ids, extraData);
 }
 
-
 async function onPrefsEvent(type: string, data: { [key: string]: any }) {
   if (type !== "load") return;
 
-  await new Promise(resolve => data.window.setTimeout(resolve, 100));
+  await new Promise((resolve) => data.window.setTimeout(resolve, 100));
 
-  const win: Window   = data.window;
+  const win: Window = data.window;
   const doc: Document = win.document;
 
-  const versionEl       = doc.getElementById("prefs-version")           as HTMLElement;
+  const versionEl = doc.getElementById("prefs-version") as HTMLElement;
   if (versionEl) {
     versionEl.textContent = `v${version}`;
     versionEl.style.color = getColors(win).mutedText;
   }
 
-  const verifyBtn       = doc.getElementById("prefs-verify-btn")       as HTMLElement;
-  const emailInput      = doc.getElementById("prefs-email-input")       as HTMLInputElement;
-  const licenseInput    = doc.getElementById("prefs-license-input")     as HTMLInputElement;
-  const statusDiv       = doc.getElementById("prefs-status")            as HTMLElement;
-  const stylesContainer = doc.getElementById("prefs-styles-container")  as HTMLElement;
-  const logoutBtn       = doc.getElementById("prefs-logout-btn")        as HTMLElement;
-  const updateRow       = doc.getElementById("prefs-update-row")        as HTMLElement;
-  const updateBtn       = doc.getElementById("prefs-check-updates-btn") as HTMLElement;
-  const updateStatus    = doc.getElementById("prefs-update-status")     as HTMLElement;
+  const verifyBtn = doc.getElementById("prefs-verify-btn") as HTMLElement;
+  const emailInput = doc.getElementById(
+    "prefs-email-input",
+  ) as HTMLInputElement;
+  const licenseInput = doc.getElementById(
+    "prefs-license-input",
+  ) as HTMLInputElement;
+  const statusDiv = doc.getElementById("prefs-status") as HTMLElement;
+  const stylesContainer = doc.getElementById(
+    "prefs-styles-container",
+  ) as HTMLElement;
+  const logoutBtn = doc.getElementById("prefs-logout-btn") as HTMLElement;
+  const updateRow = doc.getElementById("prefs-update-row") as HTMLElement;
+  const updateBtn = doc.getElementById(
+    "prefs-check-updates-btn",
+  ) as HTMLElement;
+  const updateStatus = doc.getElementById("prefs-update-status") as HTMLElement;
 
-  if (!verifyBtn || !emailInput || !licenseInput || !statusDiv || !stylesContainer) {
-    csLog("ERROR", "Prefs elements not found — preferences pane may not have loaded correctly");
+  if (
+    !verifyBtn ||
+    !emailInput ||
+    !licenseInput ||
+    !statusDiv ||
+    !stylesContainer
+  ) {
+    csLog(
+      "ERROR",
+      "Prefs elements not found — preferences pane may not have loaded correctly",
+    );
     return;
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────
   function showUpdateRow() {
     if (updateRow) {
-      updateRow.style.display    = "flex";
+      updateRow.style.display = "flex";
       updateRow.style.alignItems = "center";
     }
   }
@@ -121,7 +134,7 @@ async function onPrefsEvent(type: string, data: { [key: string]: any }) {
   }
 
   // ── Set placeholders from locale ──────────────────────────────────────────
-  emailInput.placeholder   = getString("email-placeholder");
+  emailInput.placeholder = getString("email-placeholder");
   licenseInput.placeholder = getString("license-placeholder");
 
   csLog("INFO", "Preferences pane loaded");
@@ -130,7 +143,7 @@ async function onPrefsEvent(type: string, data: { [key: string]: any }) {
   const saved = licenseManager.loadCredentials();
   if (saved) {
     csLog("INFO", "Saved credentials found — attempting cache validation");
-    emailInput.value   = saved.email;
+    emailInput.value = saved.email;
     licenseInput.value = saved.licenseKey;
   } else {
     csLog("INFO", "No saved credentials");
@@ -149,7 +162,7 @@ async function onPrefsEvent(type: string, data: { [key: string]: any }) {
     try {
       const cached = await licenseManager.validate(
         { email: saved.email, licenseKey: saved.licenseKey, zoteroUserId },
-        false
+        false,
       );
       if (cached.valid) {
         if (cached.fromGrace) {
@@ -163,7 +176,12 @@ async function onPrefsEvent(type: string, data: { [key: string]: any }) {
           statusDiv.style.color = getColors(win).success;
         }
         await customStylesManager.renderStylesInPrefs(
-          doc, win, stylesContainer, statusDiv, cached, saved.licenseKey
+          doc,
+          win,
+          stylesContainer,
+          statusDiv,
+          cached,
+          saved.licenseKey,
         );
         showUpdateRow();
       }
@@ -176,7 +194,7 @@ async function onPrefsEvent(type: string, data: { [key: string]: any }) {
 
   // ── Verify button ─────────────────────────────────────────────────────────
   verifyBtn.addEventListener("click", async () => {
-    const email      = emailInput.value.trim();
+    const email = emailInput.value.trim();
     const licenseKey = licenseInput.value.trim();
     csLog("INFO", `Verify button clicked — key length: ${licenseKey.length}`);
 
@@ -198,20 +216,21 @@ async function onPrefsEvent(type: string, data: { [key: string]: any }) {
       return;
     }
 
-    statusDiv.textContent     = getString("status-verifying");
-    statusDiv.style.color     = getColors(win).neutral;
+    statusDiv.textContent = getString("status-verifying");
+    statusDiv.style.color = getColors(win).neutral;
     stylesContainer.innerHTML = "";
     hideUpdateRow();
 
     try {
       const result = await licenseManager.validate(
         { email, licenseKey, zoteroUserId },
-        true
+        true,
       );
 
       if (!result.valid) {
         csLog("WARN", `Verification failed: ${result.reason}`);
-        statusDiv.textContent = result.reason ?? getString("status-validation-failed");
+        statusDiv.textContent =
+          result.reason ?? getString("status-validation-failed");
         statusDiv.style.color = getColors(win).error;
         return;
       }
@@ -220,7 +239,12 @@ async function onPrefsEvent(type: string, data: { [key: string]: any }) {
       licenseManager.saveCredentials(email, licenseKey);
 
       await customStylesManager.renderStylesInPrefs(
-        doc, win, stylesContainer, statusDiv, result, licenseKey
+        doc,
+        win,
+        stylesContainer,
+        statusDiv,
+        result,
+        licenseKey,
       );
 
       showUpdateRow();
@@ -233,7 +257,7 @@ async function onPrefsEvent(type: string, data: { [key: string]: any }) {
 
   // ── Check for Updates button ──────────────────────────────────────────────
   updateBtn?.addEventListener("click", async () => {
-    const email      = emailInput.value.trim();
+    const email = emailInput.value.trim();
     const licenseKey = licenseInput.value.trim();
 
     if (!email || !licenseKey) {
@@ -247,10 +271,17 @@ async function onPrefsEvent(type: string, data: { [key: string]: any }) {
 
     try {
       const updatedCount = await customStylesManager.checkAndInstallUpdates(
-        doc, win, stylesContainer, statusDiv, licenseKey
+        doc,
+        win,
+        stylesContainer,
+        statusDiv,
+        licenseKey,
       );
 
-      csLog("INFO", `Update check complete — ${updatedCount} updates available`);
+      csLog(
+        "INFO",
+        `Update check complete — ${updatedCount} updates available`,
+      );
       if (updatedCount === 0) {
         updateStatus.textContent = getString("status-all-uptodate");
         updateStatus.style.color = getColors(win).success;
@@ -270,17 +301,17 @@ async function onPrefsEvent(type: string, data: { [key: string]: any }) {
   logoutBtn?.addEventListener("click", () => {
     csLog("INFO", "Credentials cleared by user");
     licenseManager.clearCredentials();
-    emailInput.value          = "";
-    licenseInput.value        = "";
+    emailInput.value = "";
+    licenseInput.value = "";
     stylesContainer.innerHTML = "";
-    statusDiv.textContent     = getString("status-credentials-cleared");
-    statusDiv.style.color     = getColors(win).neutral;
+    statusDiv.textContent = getString("status-credentials-cleared");
+    statusDiv.style.color = getColors(win).neutral;
     hideUpdateRow();
   });
 
   // ── Copy Logs button ──────────────────────────────────────────────────────
-  const copyLogsBtn   = doc.getElementById("prefs-copy-logs-btn")  as HTMLElement;
-  const logsStatusDiv = doc.getElementById("prefs-logs-status")    as HTMLElement;
+  const copyLogsBtn = doc.getElementById("prefs-copy-logs-btn") as HTMLElement;
+  const logsStatusDiv = doc.getElementById("prefs-logs-status") as HTMLElement;
 
   copyLogsBtn?.addEventListener("click", async () => {
     const text = getFormattedLogs();
@@ -299,21 +330,20 @@ async function onPrefsEvent(type: string, data: { [key: string]: any }) {
     if (logsStatusDiv) {
       logsStatusDiv.textContent = getString("status-logs-copied");
       logsStatusDiv.style.color = getColors(win).success;
-      win.setTimeout(() => { logsStatusDiv.textContent = ""; }, 3000);
+      win.setTimeout(() => {
+        logsStatusDiv.textContent = "";
+      }, 3000);
     }
   });
 }
-
 
 function onShortcuts(type: string) {
   // Reserved for future keyboard shortcuts
 }
 
-
 function onDialogEvents(type: string) {
   // Reserved for future dialog events
 }
-
 
 export default {
   onStartup,

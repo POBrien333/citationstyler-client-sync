@@ -68,6 +68,7 @@ This is a Zotero plugin that enables users to install and manage custom citation
 Handles license validation, credential storage, and Zotero account integration.
 
 **Key Functions:**
+
 - `validate(credentials, forceRefresh)` — Validate email + license key against backend
 - `saveCredentials(email, licenseKey)` — Store encrypted credentials in Zotero prefs
 - `loadCredentials()` — Retrieve stored credentials
@@ -76,6 +77,7 @@ Handles license validation, credential storage, and Zotero account integration.
 - `isCacheExpiringSoon()` — Check if validation cache is expiring
 
 **Features:**
+
 - Cache-based validation for offline support
 - Grace period handling
 - Device activation limit enforcement
@@ -85,6 +87,7 @@ Handles license validation, credential storage, and Zotero account integration.
 Manages style installation, rendering, and updates.
 
 **Key Functions:**
+
 - `renderStylesInPrefs(doc, container, statusDiv, validationResult, licenseKey)` — Display available styles in preferences
 - `checkAndInstallUpdates(doc, container, statusDiv, licenseKey)` — Fetch and install style updates
 - `installStyle(styleName, styleContent)` — Install a style to Zotero
@@ -92,22 +95,27 @@ Manages style installation, rendering, and updates.
 ## Lifecycle Hooks (`src/hooks.ts`)
 
 ### `onStartup()`
+
 - Waits for Zotero initialization
 - Initializes localization
 - Registers the preferences pane
 - Opens preferences on first install
 
 ### `onMainWindowLoad(win)`
+
 - Initializes ZToolkit for each window
 - Registers FTL (Fluent) localization strings
 
 ### `onMainWindowUnload(win)` / `onShutdown()`
+
 - Cleans up event listeners
 - Closes dialog windows
 - Unregisters all handlers
 
 ### `onPrefsEvent(type, data)`
+
 Handles the preferences pane UI interactions:
+
 - **Email/License Input**: Form fields for credentials
 - **Verify Button**: Triggers license validation
 - **Styles Container**: Displays installable styles with Install/Update buttons
@@ -115,6 +123,7 @@ Handles the preferences pane UI interactions:
 - **Check for Updates Button**: Fetches updates for installed styles
 
 **Status Colors:**
+
 - Green (#28a745): Verified license
 - Orange (#fd7e14): Grace period or expiring soon
 - Red (#dc3545): Errors (invalid email, missing credentials, validation failed)
@@ -164,6 +173,7 @@ npm run update-deps    # Update dependencies
 ### First Install Experience
 
 When the plugin is first installed:
+
 1. Checks `extensions.citationstyler.installed` preference
 2. If not set, opens the preferences pane automatically
 3. User enters email and license key
@@ -173,6 +183,7 @@ When the plugin is first installed:
 ### Preferences Pane Elements
 
 All elements queried in `onPrefsEvent`:
+
 - `#prefs-verify-btn` — License verification button
 - `#prefs-email-input` — Email address input
 - `#prefs-license-input` — License key input
@@ -194,8 +205,9 @@ All elements queried in `onPrefsEvent`:
 ### Email Validation
 
 Simple regex validation in `onPrefsEvent`:
+
 ```typescript
-!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 ```
 
 ## Localization
@@ -203,6 +215,7 @@ Simple regex validation in `onPrefsEvent`:
 Localization strings are stored in `addon/locale/` and referenced via `getString(key, options)` from `src/utils/locale.ts`.
 
 **Common Keys:**
+
 - `prefs-title` — Preferences pane title
 - `email-placeholder`, `license-placeholder` — Input placeholders
 - `status-verifying`, `status-verified`, `status-verification-failed` — Status messages
@@ -213,11 +226,13 @@ Localization strings are stored in `addon/locale/` and referenced via `getString
 ## Error Handling
 
 **Common User-Facing Errors:**
+
 - "Please log in to your Zotero account" → User must sign in at zotero.org
 - "Email does not match this license key" → Email/key mismatch
 - "Activation limit reached" → Too many devices for this license
 
 **Developer Error Handling:**
+
 - Try-catch blocks around validation and update checks
 - Errors logged via `ztoolkit.log()` for debugging
 - User receives readable error messages in status display
@@ -236,6 +251,7 @@ Localization strings are stored in `addon/locale/` and referenced via `getString
 Tests are written in Mocha + Chai in `test/startup.test.ts`.
 
 **Key Test Requirement:**
+
 - Tests wait for plugin initialization via: `Zotero.MyCustomStyles.data.initialized`
 
 ## Known Limitations & Notes
