@@ -60,6 +60,12 @@ For license issues or support, please contact: info@citationstyler.com
 
 ## Changelog
 
+### v1.0.3
+
+- Switch API endpoint from staging to production (citationstyler.com)
+- Fix CI lint formatting issues
+- Upgrade GitHub Actions artifact upload to v5 (resolve Node.js 20 deprecation)
+
 ### v1.0.2
 
 - Dark mode support: all UI elements now adapt to Zotero's light/dark theme

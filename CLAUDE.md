@@ -9,6 +9,13 @@ This is a Zotero plugin that enables users to install and manage custom citation
 **License:** AGPL-3.0-or-later
 **Version:** 1.0.0 (MVP)
 
+## Release Process Notes
+
+- When the user asks to "release" or "prepare a release", always:
+  1. Add a new version entry to the **Changelog** section in `README.md`
+  2. Bump the version in `package.json`
+  3. Run `npm run release`
+
 ## Key Features
 
 - **License Validation**: Users enter email and license key; the plugin validates against a backend service
