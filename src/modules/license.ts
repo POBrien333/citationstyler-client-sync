@@ -228,5 +228,4 @@ export class LicenseManager {
 
 export const licenseManager = new LicenseManager();
 
-export const API_BASE =
-  "https://citationstyler.com/wp-json/citationstyler/v1";
+export const API_BASE = "https://citationstyler.com/wp-json/citationstyler/v1";
