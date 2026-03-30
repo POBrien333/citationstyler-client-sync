@@ -179,7 +179,27 @@ export class LicenseManager {
           reason: data.reason ?? "License validation failed.",
         };
       }
-    } catch (e) {
+    } catch (e: any) {
+      // Zotero.HTTP.request throws on non-2xx; check for a 429 with a reason
+      if (e?.status === 429 || e?.xmlhttp?.status === 429) {
+        const xhr = e?.xmlhttp ?? e;
+        let reason: string | undefined;
+        try {
+          const body =
+            typeof xhr.response === "string"
+              ? JSON.parse(xhr.response)
+              : xhr.response;
+          reason = body?.reason;
+        } catch {
+          /* ignore parse errors */
+        }
+        csLog("WARN", "License validation rejected with 429:", reason ?? e);
+        return {
+          valid: false,
+          reason: reason ?? "Too many requests. Please try again later.",
+        };
+      }
+
       csLog(
         "ERROR",
         "License validation error — attempting grace period fallback:",
