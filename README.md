@@ -60,6 +60,10 @@ For license issues or support, please contact: info@citationstyler.com
 
 ## Changelog
 
+### v1.0.5
+
+- Add support for Zotero 9
+
 ### v1.0.4
 
 - Improved 429 error handling: the server's reason message is now displayed directly to the user instead of a generic "Could not reach the license server" message
