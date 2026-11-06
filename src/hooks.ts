@@ -133,6 +133,61 @@ async function onPrefsEvent(type: string, data: { [key: string]: any }) {
     if (updateStatus) updateStatus.textContent = "";
   }
 
+  /**
+   * The styles list and "Check for Updates" always use the saved (verified)
+   * credentials. If the fields no longer match them, lock both until the
+   * user presses Verify, so what's shown is always what's used.
+   */
+  let statusBeforeLock: { text: string; color: string } | null = null;
+  function syncCredentialsLock() {
+    const s = licenseManager.loadCredentials();
+    const changed =
+      !!s &&
+      (emailInput.value.trim() !== s.email ||
+        licenseInput.value.trim() !== s.licenseKey);
+    const lockMsg = getString("status-credentials-changed");
+
+    for (const el of [stylesContainer, updateRow]) {
+      if (!el) continue;
+      el.toggleAttribute("inert", changed);
+      el.style.opacity = changed ? "0.5" : "";
+    }
+
+    if (changed && !statusBeforeLock) {
+      statusBeforeLock = {
+        text: statusDiv.textContent ?? "",
+        color: statusDiv.style.color,
+      };
+      statusDiv.textContent = lockMsg;
+      statusDiv.style.color = getColors(win).warning;
+    } else if (!changed && statusBeforeLock) {
+      // Restore the previous status, unless something else replaced ours
+      if (statusDiv.textContent === lockMsg) {
+        statusDiv.textContent = statusBeforeLock.text;
+        statusDiv.style.color = statusBeforeLock.color;
+      }
+      statusBeforeLock = null;
+    }
+  }
+  emailInput.addEventListener("input", syncCredentialsLock);
+  licenseInput.addEventListener("input", syncCredentialsLock);
+
+  /** Ignores clicks while the previous click's work is still running. */
+  function onClickExclusive(btn: HTMLElement, handler: () => Promise<void>) {
+    let busy = false;
+    btn.addEventListener("click", async () => {
+      if (busy) return;
+      busy = true;
+      btn.setAttribute("disabled", "true");
+      try {
+        await handler();
+      } finally {
+        busy = false;
+        btn.removeAttribute("disabled");
+      }
+    });
+  }
+
   // ── Set placeholders from locale ──────────────────────────────────────────
   emailInput.placeholder = getString("email-placeholder");
   licenseInput.placeholder = getString("license-placeholder");
@@ -193,7 +248,7 @@ async function onPrefsEvent(type: string, data: { [key: string]: any }) {
   }
 
   // ── Verify button ─────────────────────────────────────────────────────────
-  verifyBtn.addEventListener("click", async () => {
+  onClickExclusive(verifyBtn, async () => {
     const email = emailInput.value.trim();
     const licenseKey = licenseInput.value.trim();
     csLog("INFO", `Verify button clicked — key length: ${licenseKey.length}`);
@@ -237,6 +292,7 @@ async function onPrefsEvent(type: string, data: { [key: string]: any }) {
 
       csLog("INFO", "Credentials saved after successful verification");
       licenseManager.saveCredentials(email, licenseKey);
+      syncCredentialsLock(); // fields now match the saved credentials
 
       await customStylesManager.renderStylesInPrefs(
         doc,
@@ -256,46 +312,47 @@ async function onPrefsEvent(type: string, data: { [key: string]: any }) {
   });
 
   // ── Check for Updates button ──────────────────────────────────────────────
-  updateBtn?.addEventListener("click", async () => {
-    const email = emailInput.value.trim();
-    const licenseKey = licenseInput.value.trim();
-
-    if (!email || !licenseKey) {
-      updateStatus.textContent = getString("status-missing-credentials");
-      updateStatus.style.color = getColors(win).error;
-      return;
-    }
-
-    updateStatus.textContent = getString("status-verifying");
-    updateStatus.style.color = getColors(win).neutral;
-
-    try {
-      const updatedCount = await customStylesManager.checkAndInstallUpdates(
-        doc,
-        win,
-        stylesContainer,
-        statusDiv,
-        licenseKey,
-      );
-
-      csLog(
-        "INFO",
-        `Update check complete — ${updatedCount} updates available`,
-      );
-      if (updatedCount === 0) {
-        updateStatus.textContent = getString("status-all-uptodate");
-        updateStatus.style.color = getColors(win).success;
-      } else {
-        updateStatus.textContent = getString("status-updates-available", {
-          args: { count: updatedCount },
-        });
-        updateStatus.style.color = getColors(win).warning;
+  if (updateBtn)
+    onClickExclusive(updateBtn, async () => {
+      // Use the saved (verified) key, not whatever is typed in the field
+      const saved = licenseManager.loadCredentials();
+      if (!saved) {
+        updateStatus.textContent = getString("status-missing-credentials");
+        updateStatus.style.color = getColors(win).error;
+        return;
       }
-    } catch (e) {
-      updateStatus.textContent = getString("status-update-failed");
-      updateStatus.style.color = getColors(win).error;
-    }
-  });
+      const licenseKey = saved.licenseKey;
+
+      updateStatus.textContent = getString("status-verifying");
+      updateStatus.style.color = getColors(win).neutral;
+
+      try {
+        const updatedCount = await customStylesManager.checkAndInstallUpdates(
+          doc,
+          win,
+          stylesContainer,
+          statusDiv,
+          licenseKey,
+        );
+
+        csLog(
+          "INFO",
+          `Update check complete — ${updatedCount} updates available`,
+        );
+        if (updatedCount === 0) {
+          updateStatus.textContent = getString("status-all-uptodate");
+          updateStatus.style.color = getColors(win).success;
+        } else {
+          updateStatus.textContent = getString("status-updates-available", {
+            args: { count: updatedCount },
+          });
+          updateStatus.style.color = getColors(win).warning;
+        }
+      } catch (e) {
+        updateStatus.textContent = getString("status-update-failed");
+        updateStatus.style.color = getColors(win).error;
+      }
+    });
 
   // ── Clear Credentials button ──────────────────────────────────────────────
   logoutBtn?.addEventListener("click", () => {
@@ -303,6 +360,7 @@ async function onPrefsEvent(type: string, data: { [key: string]: any }) {
     licenseManager.clearCredentials();
     emailInput.value = "";
     licenseInput.value = "";
+    syncCredentialsLock(); // nothing saved any more, so unlock
     stylesContainer.innerHTML = "";
     statusDiv.textContent = getString("status-credentials-cleared");
     statusDiv.style.color = getColors(win).neutral;

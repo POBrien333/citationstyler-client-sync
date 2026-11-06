@@ -29,6 +29,7 @@ export type FluentMessageId =
   | 'startup-finish'
   | 'status-all-uptodate'
   | 'status-cache-error'
+  | 'status-credentials-changed'
   | 'status-credentials-cleared'
   | 'status-grace-period'
   | 'status-install-failed'

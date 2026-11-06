@@ -14,7 +14,9 @@ const buffer: LogEntry[] = [];
 export function csLog(level: LogLevel, ...args: unknown[]): void {
   const message = args
     .map((a) => (a instanceof Error ? a.message : String(a)))
-    .join(" ");
+    .join(" ")
+    // Zotero HTTP errors include the request URL; never log license keys
+    .replace(/(license_key=)[^&\s"']+/gi, "$1[REDACTED]");
   const timestamp = new Date().toISOString();
 
   if (buffer.length >= MAX_ENTRIES) buffer.shift();
