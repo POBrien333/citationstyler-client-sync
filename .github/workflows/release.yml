@@ -1,21 +1,45 @@
 name: Release
 
+# Publishes the XPI to GitHub Releases and updates update.json, which every
+# installed copy of the plugin uses to auto-update. Because this job can ship
+# code to all users, every action is pinned to a full commit SHA (a tag or
+# branch can be moved to point at different code) and the job gets only the
+# permissions and secrets it needs.
+#
+# Steps mirror zotero-plugin-dev/workflows release-plugin.yml + setup-js
+# (npm path) at 899417a9d7f9453df25d4241d4ee16a70a743e58, inlined so no
+# third-party code is loaded at run time.
+
 on:
   push:
     tags:
       - v**
 
 permissions:
-  contents: write
-  issues: write
-  pull-requests: write
+  contents: write # create the release, upload the XPI, update update.json
 
 jobs:
-  create-release:
-    uses: zotero-plugin-dev/workflows/.github/workflows/release-plugin.yml@main
-    # You can customize any of the inputs here.
-    # If you omit an input, its default value will be used.
-    with:
-      build: "npm run build"
-      release: "npm run release"
-    secrets: inherit
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0 # full history for the generated changelog
+
+      - name: Setup Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: lts/*
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Release to GitHub
+        run: npm run release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
