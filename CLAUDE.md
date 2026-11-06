@@ -20,6 +20,19 @@ This is a Zotero plugin that enables users to install and manage custom citation
   5. The tag triggers `.github/workflows/release.yml`, which builds, creates the GitHub release with the XPI, and updates `update.json`
 - **Do not run `npm run release` locally.** Outside CI it bumps the version, commits, tags and pushes straight to `main`.
 
+## Planned for a Future Release
+
+Raise these with the user when preparing the next release.
+
+### Send the license key in a header instead of the URL
+
+- **Problem:** `src/modules/customStyles.ts` sends the key as a query parameter: `GET /styles?license_key=…` and `GET /styles/{id}?license_key=…`. URLs end up in server access logs, proxy logs and caches. (The validate endpoint already uses a POST body and is fine.)
+- **Order matters:**
+  1. **Server first:** accept the key in a request header (e.g. `X-License-Key`) on both endpoints, **while still accepting `?license_key=`**, because every installed copy up to v1.0.8 uses it.
+  2. **Plugin:** once the server is live, send the header and stop adding `license_key` to the URL. Keep the `license_key=` log redaction in `src/utils/logger.ts`.
+  3. **Later:** the server can drop query-parameter support once nearly all users run the new version.
+- **Status:** waiting on the server change (step 1).
+
 ## Key Features
 
 - **License Validation**: Users enter email and license key; the plugin validates against a backend service
