@@ -64,11 +64,12 @@ For license issues or support, please contact: info@citationstyler.com
 
 ### v1.0.7
 
+- Fix issue with user interface not switching state Install>Reinstall
 - Add support for Zotero 10
 
 ### v1.0.6
 
-- Minor bug fixes
+- Minor fixes
 
 ### v1.0.5
 
