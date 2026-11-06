@@ -114,8 +114,11 @@ class CustomStylesManager {
     try {
       const zotero = ztoolkit.getGlobal("Zotero");
       if (!zotero) throw new Error("Zotero global not found");
-      const style = await zotero.Styles.install(styleContent, null, true);
-      csLog("INFO", `Style installed: ${style.title}`);
+      // Zotero.Styles.install resolves to { styleTitle, styleID }
+      const result = (await zotero.Styles.install(styleContent, null, true)) as
+        | { styleTitle?: string; styleID?: string }
+        | undefined;
+      csLog("INFO", `Style installed: ${result?.styleTitle ?? styleId}`);
     } catch (e) {
       csLog("ERROR", "installStyleToZotero error:", e);
       throw e;
