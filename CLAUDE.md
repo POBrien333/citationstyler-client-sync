@@ -11,10 +11,14 @@ This is a Zotero plugin that enables users to install and manage custom citation
 
 ## Release Process Notes
 
-- When the user asks to "release" or "prepare a release", always:
-  1. Add a new version entry to the **Changelog** section in `README.md`
-  2. Bump the version in `package.json`
-  3. Run `npm run release`
+- Never commit to `main` directly; every change goes through a branch + PR.
+- When the user asks to "release" or "prepare a release":
+  1. On a branch, add a new version entry to the **Changelog** section in `README.md`
+  2. Bump the version with `npm version X.Y.Z --no-git-tag-version` (updates `package.json` and `package-lock.json`)
+  3. Open a PR; the user merges it
+  4. Tag the merge commit and push **only the tag**: `git tag vX.Y.Z <merge-sha> && git push origin vX.Y.Z`
+  5. The tag triggers `.github/workflows/release.yml`, which builds, creates the GitHub release with the XPI, and updates `update.json`
+- **Do not run `npm run release` locally.** Outside CI it bumps the version, commits, tags and pushes straight to `main`.
 
 ## Key Features
 
@@ -247,12 +251,7 @@ Localization strings are stored in `addon/locale/` and referenced via `getString
 
 ## Release Process
 
-1. Update version in `package.json`
-2. Run `npm run build` to verify
-3. Run `npm run release` to generate XPI
-4. XPI is created from `.scaffold/build/`
-5. Upload to GitHub releases
-6. Plugin update URL points to release JSON
+See **Release Process Notes** at the top. In short: changelog + version bump via PR, then push a `vX.Y.Z` tag. CI (`zotero-plugin release` in CI mode) builds the XPI, uploads it to the `vX.Y.Z` GitHub release, and updates `update.json` on the `release` tag, which installed copies poll via the manifest's `update_url`.
 
 ## Testing
 
