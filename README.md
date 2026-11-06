@@ -62,6 +62,20 @@ For license issues or support, please contact: info@citationstyler.com
 
 ## Changelog
 
+### v1.0.8
+
+- Add support for Zotero 11
+- Security: update the underlying plugin toolkit, which removes two `zotero://` links that web pages could use to trigger add-on installs or run code
+- Security: your license key is no longer included in exported logs
+- Offline use: the saved license is only accepted for the exact credentials that verified it, and a mistyped key no longer erases it
+- If you edit your email or license key, the styles list and "Check for Updates" are locked until you press "Verify License"
+- "Check for Updates" always uses your verified credentials
+- Clicking Verify or Check for Updates several times no longer sends duplicate requests
+- Slow server responses now time out properly
+- Clearer error message when a style can't be verified
+- Logs show the name and ID of each installed style
+- Your saved credentials are removed when you uninstall the plugin
+
 ### v1.0.7
 
 - Fix issue with user interface not switching state Install>Reinstall
