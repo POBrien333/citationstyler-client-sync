@@ -1,5 +1,7 @@
 # Citation Styler Client Sync — Zotero Plugin
 
+[![Zotero Plugins grade](https://zoteroplugins.org/badge/citationstyler-client-sync.svg)](https://zoteroplugins.org/p/citationstyler-client-sync)
+
 A Zotero plugin that allows you to install and manage your purchased custom citation styles directly within Zotero.
 
 Please download the latest version of the plugin here:
