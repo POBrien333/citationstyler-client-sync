@@ -7,7 +7,7 @@ This is a Zotero plugin that enables users to install and manage custom citation
 **Repository:** https://github.com/POBrien333/citationstyler-client-sync
 **Plugin ID:** `citationstyler-sync@citationstyler.com`
 **License:** AGPL-3.0-or-later
-**Version:** 1.0.0 (MVP)
+**Version:** see `version` in `package.json`
 
 ## Release Process Notes
 
@@ -28,7 +28,7 @@ This is a Zotero plugin that enables users to install and manage custom citation
 ## Technology Stack
 
 - **Language**: TypeScript
-- **Framework**: [Zotero Plugin Toolkit](https://github.com/windingwind/zotero-plugin-toolkit) v5.1.0-beta.13
+- **Framework**: [Zotero Plugin Toolkit](https://github.com/windingwind/zotero-plugin-toolkit) v6 (only `BasicTool` is used, see `src/utils/ztoolkit.ts`)
 - **Build Tool**: [zotero-plugin-scaffold](https://www.npmjs.com/package/zotero-plugin-scaffold)
 - **Testing**: Mocha + Chai
 - **Code Quality**: ESLint + Prettier
@@ -77,7 +77,7 @@ Handles license validation, credential storage, and Zotero account integration.
 **Key Functions:**
 
 - `validate(credentials, forceRefresh)` — Validate email + license key against backend
-- `saveCredentials(email, licenseKey)` — Store encrypted credentials in Zotero prefs
+- `saveCredentials(email, licenseKey)` — Store credentials in Zotero prefs (plaintext, not encrypted)
 - `loadCredentials()` — Retrieve stored credentials
 - `clearCredentials()` — Remove stored credentials
 - `getZoteroUserId()` — Get logged-in Zotero account ID
@@ -85,7 +85,8 @@ Handles license validation, credential storage, and Zotero account integration.
 
 **Features:**
 
-- Cache-based validation for offline support
+- Cache-based validation for offline support (14-day cache + 7-day grace period)
+- The cache is bound to a SHA-256 fingerprint of email + license key + Zotero user ID, so it is only reused for the exact credentials that earned it
 - Grace period handling
 - Device activation limit enforcement
 
@@ -97,7 +98,7 @@ Manages style installation, rendering, and updates.
 
 - `renderStylesInPrefs(doc, container, statusDiv, validationResult, licenseKey)` — Display available styles in preferences
 - `checkAndInstallUpdates(doc, container, statusDiv, licenseKey)` — Fetch and install style updates
-- `installStyle(styleName, styleContent)` — Install a style to Zotero
+- `installStyleToZotero(styleId, styleContent)` — Install a style to Zotero (`Zotero.Styles.install` resolves to `{ styleTitle, styleID }`)
 
 ## Lifecycle Hooks (`src/hooks.ts`)
 
@@ -241,7 +242,7 @@ Localization strings are stored in `addon/locale/` and referenced via `getString
 **Developer Error Handling:**
 
 - Try-catch blocks around validation and update checks
-- Errors logged via `ztoolkit.log()` for debugging
+- Errors logged via `csLog()` (`src/utils/logger.ts`), which keeps a 200-entry buffer for the "Copy Logs" button and redacts `license_key=` values
 - User receives readable error messages in status display
 
 ## Release Process
@@ -259,7 +260,7 @@ Tests are written in Mocha + Chai in `test/startup.test.ts`.
 
 **Key Test Requirement:**
 
-- Tests wait for plugin initialization via: `Zotero.MyCustomStyles.data.initialized`
+- Tests wait for plugin initialization via: `Zotero.CitationStylerSync.data.initialized`
 
 ## Known Limitations & Notes
 

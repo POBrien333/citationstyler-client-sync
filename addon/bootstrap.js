@@ -55,4 +55,15 @@ async function shutdown({ id, version, resourceURI, rootURI }, reason) {
   }
 }
 
-async function uninstall(data, reason) {}
+async function uninstall(data, reason) {
+  // Only on a real uninstall (not on upgrade/downgrade): remove the stored
+  // email, license key and license cache so nothing is left behind in prefs.js.
+  if (reason !== ADDON_UNINSTALL) return;
+  try {
+    Services.prefs.deleteBranch("extensions.zotero.extensions.citationstyler.");
+  } catch (e) {
+    Services.console.logStringMessage(
+      `[Citation Styler] Could not clear prefs on uninstall: ${e}`,
+    );
+  }
+}
