@@ -1,6 +1,7 @@
 import { getString } from "../utils/locale";
 import { getColors } from "../utils/theme";
 import { csLog } from "../utils/logger";
+import { sha256Hex } from "../utils/hash";
 import { API_BASE, LicenseStatus } from "./license";
 
 interface StyleData {
@@ -11,28 +12,16 @@ interface StyleData {
 }
 
 class CustomStylesManager {
-  // ─── Crypto ───────────────────────────────────────────────────
-
-  private async computeSHA256(content: string): Promise<string> {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(content);
-    const buffer = await crypto.subtle.digest("SHA-256", data);
-    return Array.from(new Uint8Array(buffer))
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join("");
-  }
-
   // ─── Remote API ───────────────────────────────────────────────
 
   private async fetchWithTimeout(url: string, timeoutMs = 10000): Promise<any> {
     const zotero = ztoolkit.getGlobal("Zotero");
-    const timeout = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error("Request timed out")), timeoutMs),
-    );
-    return Promise.race([
-      zotero.HTTP.request("GET", url, { responseType: "json" }),
-      timeout,
-    ]);
+    // Zotero's built-in timeout aborts the request and throws
+    // Zotero.HTTP.TimeoutException, so nothing is left running.
+    return zotero.HTTP.request("GET", url, {
+      responseType: "json",
+      timeout: timeoutMs,
+    });
   }
 
   private async fetchRemoteStyles(licenseKey: string): Promise<StyleData[]> {
@@ -63,13 +52,20 @@ class CustomStylesManager {
     licenseKey: string,
     expectedHash: string,
   ): Promise<string> {
+    if (!expectedHash) {
+      csLog("ERROR", `No checksum provided by server for ${styleId}`);
+      throw new Error(
+        "No checksum provided for this style. Please contact support.",
+      );
+    }
+
     const response = await this.fetchWithTimeout(
-      `${API_BASE}/styles/${styleId}?license_key=${encodeURIComponent(licenseKey)}`,
+      `${API_BASE}/styles/${encodeURIComponent(styleId)}?license_key=${encodeURIComponent(licenseKey)}`,
     );
     const data = response.response as unknown as { content: string };
     if (!data.content) throw new Error("No content in response");
 
-    const actualHash = await this.computeSHA256(data.content);
+    const actualHash = await sha256Hex(data.content);
     if (actualHash !== expectedHash) {
       csLog(
         "ERROR",
@@ -88,6 +84,7 @@ class CustomStylesManager {
   private getInstalledStyleDate(styleId: string): Date | null {
     try {
       const zotero = ztoolkit.getGlobal("Zotero");
+      // Assumes the server's style ID matches the CSL <id> slug
       const id = `http://www.zotero.org/styles/${styleId}`;
       const installedStyle = zotero.Styles.get(id);
       if (!installedStyle?.updated) return null;
@@ -118,7 +115,10 @@ class CustomStylesManager {
       const result = (await zotero.Styles.install(styleContent, null, true)) as
         | { styleTitle?: string; styleID?: string }
         | undefined;
-      csLog("INFO", `Style installed: ${result?.styleTitle ?? styleId}`);
+      csLog(
+        "INFO",
+        `Style installed: ${result?.styleTitle ?? styleId} (${result?.styleID ?? "unknown ID"})`,
+      );
     } catch (e) {
       csLog("ERROR", "installStyleToZotero error:", e);
       throw e;

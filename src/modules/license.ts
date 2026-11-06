@@ -1,10 +1,13 @@
 import { csLog } from "../utils/logger";
+import { sha256Hex } from "../utils/hash";
 
 const PREF_LICENSE_KEY = "extensions.citationstyler.licenseKey";
 const PREF_EMAIL = "extensions.citationstyler.email";
 const PREF_ZOTERO_USER_ID = "extensions.citationstyler.zoteroUserId";
 const PREF_CACHE_VALID = "extensions.citationstyler.cacheValid";
 const PREF_CACHE_EXPIRY = "extensions.citationstyler.cacheExpiry";
+// Fingerprint of the credentials that earned the cached "valid" status
+const PREF_CACHE_OWNER = "extensions.citationstyler.cacheOwner";
 
 const CACHE_TTL_MS = 14 * 24 * 60 * 60 * 1000;
 const GRACE_PERIOD_MS = 7 * 24 * 60 * 60 * 1000;
@@ -55,37 +58,62 @@ export class LicenseManager {
   clearCredentials() {
     Zotero.Prefs.clear(PREF_EMAIL);
     Zotero.Prefs.clear(PREF_LICENSE_KEY);
-    Zotero.Prefs.clear(PREF_CACHE_VALID);
-    Zotero.Prefs.clear(PREF_CACHE_EXPIRY);
+    this.clearCache();
   }
 
   // ─── Cache ────────────────────────────────────────────────────
 
-  private setCacheValid(styles: string[]) {
+  private fingerprint(credentials: LicenseCredentials): Promise<string> {
+    return sha256Hex(
+      [
+        credentials.email.trim().toLowerCase(),
+        credentials.licenseKey.trim(),
+        credentials.zoteroUserId,
+      ].join("\n"),
+    );
+  }
+
+  private clearCache() {
+    Zotero.Prefs.clear(PREF_CACHE_VALID);
+    Zotero.Prefs.clear(PREF_CACHE_EXPIRY);
+    Zotero.Prefs.clear(PREF_CACHE_OWNER);
+  }
+
+  private async setCacheValid(
+    credentials: LicenseCredentials,
+    styles: string[],
+  ) {
     Zotero.Prefs.set(PREF_CACHE_VALID, JSON.stringify(styles));
     Zotero.Prefs.set(PREF_CACHE_EXPIRY, String(Date.now() + CACHE_TTL_MS));
+    Zotero.Prefs.set(PREF_CACHE_OWNER, await this.fingerprint(credentials));
   }
 
-  private getCachedStatus(): LicenseStatus | null {
+  /**
+   * Returns the cached status only if it was earned by these exact
+   * credentials. `allowGrace` also accepts a cache up to GRACE_PERIOD_MS
+   * past its expiry (used when the server is unreachable).
+   */
+  private async getCachedStatus(
+    credentials: LicenseCredentials,
+    allowGrace: boolean,
+  ): Promise<LicenseStatus | null> {
     try {
       const expiry = Number(Zotero.Prefs.get(PREF_CACHE_EXPIRY));
       const cached = Zotero.Prefs.get(PREF_CACHE_VALID) as string;
-      if (!expiry || !cached) return null;
-      if (Date.now() > expiry) return null;
-      return { valid: true, styles: JSON.parse(cached) };
-    } catch (e) {
-      return null;
-    }
-  }
-
-  private getCachedStatusWithGrace(): LicenseStatus | null {
-    try {
-      const expiry = Number(Zotero.Prefs.get(PREF_CACHE_EXPIRY));
-      const cached = Zotero.Prefs.get(PREF_CACHE_VALID) as string;
-      if (!expiry || !cached) return null;
-      if (Date.now() > expiry + GRACE_PERIOD_MS) return null;
-      const isInGrace = Date.now() > expiry;
-      return { valid: true, styles: JSON.parse(cached), fromGrace: isInGrace };
+      const owner = Zotero.Prefs.get(PREF_CACHE_OWNER) as string;
+      if (!expiry || !cached || !owner) return null;
+      if (owner !== (await this.fingerprint(credentials))) {
+        csLog("INFO", "Cached license belongs to different credentials");
+        return null;
+      }
+      const now = Date.now();
+      const limit = allowGrace ? expiry + GRACE_PERIOD_MS : expiry;
+      if (now > limit) return null;
+      return {
+        valid: true,
+        styles: JSON.parse(cached),
+        fromGrace: now > expiry,
+      };
     } catch (e) {
       return null;
     }
@@ -121,7 +149,7 @@ export class LicenseManager {
     );
 
     if (!forceRefresh) {
-      const cached = this.getCachedStatus();
+      const cached = await this.getCachedStatus(credentials, false);
       if (cached) {
         csLog("INFO", "License validation served from cache");
         return cached;
@@ -138,15 +166,10 @@ export class LicenseManager {
 
     try {
       const zotero = ztoolkit.getGlobal("Zotero");
-      const timeout = new Promise((_, reject) =>
-        setTimeout(
-          () => reject(new Error("Request timed out")),
-          REQUEST_TIMEOUT,
-        ),
-      );
-
-      const response = (await Promise.race([
-        zotero.HTTP.request("POST", `${API_BASE}/license/validate`, {
+      const response = (await zotero.HTTP.request(
+        "POST",
+        `${API_BASE}/license/validate`,
+        {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             email: credentials.email,
@@ -154,9 +177,10 @@ export class LicenseManager {
             zotero_user_id: credentials.zoteroUserId,
           }),
           responseType: "json",
-        }),
-        timeout,
-      ])) as any;
+          // Built-in timeout aborts the request (Zotero.HTTP.TimeoutException)
+          timeout: REQUEST_TIMEOUT,
+        },
+      )) as any;
 
       const data = response.response as unknown as {
         valid: boolean;
@@ -169,11 +193,16 @@ export class LicenseManager {
           "INFO",
           `License validated via API — styles count: ${data.styles?.length ?? 0}`,
         );
-        this.setCacheValid(data.styles ?? []);
+        await this.setCacheValid(credentials, data.styles ?? []);
         return { valid: true, styles: data.styles ?? [] };
       } else {
-        Zotero.Prefs.clear(PREF_CACHE_VALID);
-        Zotero.Prefs.clear(PREF_CACHE_EXPIRY);
+        // Only drop the cache if these are the credentials that earned it
+        // (e.g. license revoked) — a typo in the key must not wipe it.
+        const owner = Zotero.Prefs.get(PREF_CACHE_OWNER) as string;
+        if (owner && owner === (await this.fingerprint(credentials))) {
+          csLog("INFO", "Cached license cleared — server rejected its owner");
+          this.clearCache();
+        }
         return {
           valid: false,
           reason: data.reason ?? "License validation failed.",
@@ -206,7 +235,8 @@ export class LicenseManager {
         e,
       );
 
-      const grace = this.getCachedStatusWithGrace();
+      // Only these exact credentials may fall back to the cache
+      const grace = await this.getCachedStatus(credentials, true);
       if (grace) {
         csLog(
           "WARN",

@@ -13,6 +13,7 @@ status-validation-failed = License validation failed.
 status-verify-error = Verification failed. Please try again.
 status-cache-error = Could not load saved license. Please verify again.
 status-credentials-cleared = Credentials cleared.
+status-credentials-changed = Credentials changed. Press "Verify License" to use them.
 status-loading-styles = Loading styles…
 status-styles-found = { $count } style found
 status-styles-found-plural = { $count } styles found

@@ -13,6 +13,7 @@ status-validation-failed = Lizenzprüfung fehlgeschlagen.
 status-verify-error = Prüfung fehlgeschlagen. Bitte erneut versuchen.
 status-cache-error = Gespeicherte Lizenz konnte nicht geladen werden. Bitte erneut prüfen.
 status-credentials-cleared = Zugangsdaten gelöscht.
+status-credentials-changed = Zugangsdaten geändert. Bitte „Lizenz prüfen“ klicken, um sie zu verwenden.
 status-loading-styles = Stile werden geladen…
 status-styles-found = { $count } Stil gefunden
 status-styles-found-plural = { $count } Stile gefunden
