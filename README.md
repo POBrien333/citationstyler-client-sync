@@ -60,6 +60,14 @@ For license issues or support, please contact: info@citationstyler.com
 
 ## Changelog
 
+### v1.0.7
+
+- Add support for Zotero 10
+  
+### v1.0.6
+
+- Minor bug fixes
+  
 ### v1.0.5
 
 - Add support for Zotero 9
